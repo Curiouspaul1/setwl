@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SETWL - Area Trust Layer</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#000000",
+                        "secondary": "#5d5f5f",
+                        "surface": "#f9f9f9",
+                        "cobalt": "#0035be"
+                    },
+                    "fontFamily": {
+                        "h1": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"],
+                        "label-caps": ["Space Grotesk"],
+                        "data-mono": ["Space Grotesk"],
+                        "body": ["Space Grotesk"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .neo-border {
+            border: 2px solid #000000;
+        }
+
+        .neo-border-b {
+            border-bottom: 2px solid #000000;
+        }
+
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-primary font-body antialiased min-h-screen flex flex-col pb-20 md:pb-0">
+
+    <div id="splash-screen"
+        class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="flex flex-col items-center animate-pulse text-black">
+            <h1 class="text-6xl font-black tracking-tighter uppercase mb-4">Setwl</h1>
+            <div class="w-48 h-1 bg-zinc-100 overflow-hidden neo-border relative">
+                <div id="loader-bar" class="absolute top-0 left-0 h-full bg-black transition-all duration-300 w-0">
+                </div>
+            </div>
+            <p class="font-mono text-[10px] mt-4 uppercase tracking-[0.2em] text-outline">Syncing Neighborhood Intel...
+            </p>
+        </div>
+    </div>
+
+    <script>
+        if (sessionStorage.getItem('setu_session_active')) {
+            document.getElementById('splash-screen').style.display = 'none';
+        }
+    </script>
+
+    <header
+        class="bg-white font-['Space_Grotesk'] uppercase tracking-widest font-bold top-0 border-b-2 border-black flex justify-between items-center w-full px-6 h-16 sticky z-50">
+        <div class="flex items-center gap-4 p-2 opacity-0 pointer-events-none">
+            <span class="material-symbols-outlined">menu</span>
+        </div>
+        <div class="text-2xl font-black tracking-tighter text-black">SETWL</div>
+        <div
+            class="flex items-center gap-4 cursor-pointer hover:bg-black hover:text-white transition-colors duration-100 p-2">
+            <span class="material-symbols-outlined">account_circle</span>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col gap-8 items-center">
+        <div class="text-center space-y-4 w-full">
+            <h1 class="font-h1 text-4xl md:text-5xl font-black uppercase tracking-tight">The Reality Check for Renters.
+            </h1>
+            <p class="font-data-mono text-secondary text-sm md:text-base">Don't trust the agent. Read verified logs from
+                residents before you pay.</p>
+        </div>
+
+        <div class="w-full relative mt-4">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-black">
+                <span class="material-symbols-outlined text-secondary">search</span>
+            </div>
+            <input type="text" id="searchInput" onkeyup="filterRegions()"
+                class="w-full neo-border bg-white py-4 pl-12 pr-4 font-data-mono focus:outline-none focus:border-cobalt focus:ring-0 placeholder:text-secondary text-black"
+                placeholder="Search a curated hub (e.g. Yaba, Lekki)...">
+        </div>
+
+        <div class="w-full flex flex-col gap-4">
+            <h3 class="font-h3 text-lg font-bold uppercase border-b-2 border-black pb-2 text-black">Available Hubs</h3>
+            <div id="regions-container" class="flex flex-col gap-3">
+            </div>
+
+            <div class="mt-8 p-6 neo-border bg-surface-container-low border-dashed text-black">
+                <h4 class="font-h3 text-lg font-bold uppercase mb-2">Can't find your area?</h4>
+                <p class="font-data-mono text-secondary text-sm mb-4">Request a new hub. We verify and add neighborhoods
+                    weekly.</p>
+                <div class="flex gap-2">
+                    <input type="text" id="suggestInput" list="suggestion-list"
+                        class="w-full neo-border bg-white p-3 font-data-mono focus:outline-none focus:border-cobalt"
+                        placeholder="e.g. Gbagada Phase 1">
+                    <datalist id="suggestion-list"></datalist>
+                    <button onclick="window.submitSuggestion()" id="suggestBtn"
+                        class="bg-black text-white font-label-caps uppercase px-6 hover:bg-zinc-800 transition-colors neo-border whitespace-nowrap">Suggest</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav
+        class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-20 bg-white border-t-2 border-black">
+        <button
+            class="flex flex-col items-center justify-center bg-black text-white w-full h-full hover:bg-zinc-800 transition-colors">
+            <span class="material-symbols-outlined mb-1">search</span>
+            <span class="font-bold text-[10px] uppercase">SEARCH</span>
+        </button>
+        <button
+            class="flex flex-col items-center justify-center text-black w-full h-full hover:bg-zinc-100 transition-colors">
+            <span class="material-symbols-outlined mb-1">map</span>
+            <span class="font-bold text-[10px] uppercase">MAP</span>
+        </button>
+        <button
+            class="flex flex-col items-center justify-center text-black w-full h-full hover:bg-zinc-100 transition-colors">
+            <span class="material-symbols-outlined mb-1">person</span>
+            <span class="font-bold text-[10px] uppercase">PROFILE</span>
+        </button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, increment, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6Qke--ciCPKdzDrh4kuYf0Dl6wq635Nw",
+            authDomain: "setwl-62f51.firebaseapp.com",
+            projectId: "setwl-62f51",
+            storageBucket: "setwl-62f51.firebasestorage.app",
+            messagingSenderId: "569446349318",
+            appId: "1:569446349318:web:70b3d0f22f7cb8601fe187"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let existingSuggestions = [];
+
+        signInAnonymously(auth).then(() => {
+            loadAutocomplete();
+            syncAppData();
+        });
+
+        async function syncAppData() {
+            const loader = document.getElementById('loader-bar');
+            const splash = document.getElementById('splash-screen');
+
+            // 1. INSTANT HYDRATION: Draw from cache immediately so the screen isn't empty
+            const cachedRegions = JSON.parse(localStorage.getItem('setu_regions'));
+            if (cachedRegions) {
+                renderRegions(cachedRegions);
+                // If we've already seen the splash this session, kill it immediately
+                if (sessionStorage.getItem('setu_session_active')) {
+                    splash.style.display = 'none';
+                }
+            }
+
+            // 2. BACKGROUND SYNC: Always check for new regions/logs
+            try {
+                // If it's a cold start (no session), show progress on the loader
+                if (!sessionStorage.getItem('setu_session_active')) {
+                    loader.style.width = "20%";
+                }
+
+                // Fetch Regions
+                const regionsSnap = await getDocs(collection(db, "regions"));
+                const regions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Fetch All Logs
+                const logsSnap = await getDocs(collection(db, "logs"));
+                const logs = logsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Update Local Storage
+                localStorage.setItem('setu_regions', JSON.stringify(regions));
+                localStorage.setItem('setu_logs', JSON.stringify(logs));
+
+                // Re-render UI with the fresh data (catches new regions)
+                renderRegions(regions);
+
+                // Handle Splash Screen exit
+                if (!sessionStorage.getItem('setu_session_active')) {
+                    loader.style.width = "100%";
+                    sessionStorage.setItem('setu_session_active', 'true');
+                    setTimeout(() => {
+                        splash.classList.add('opacity-0', 'pointer-events-none');
+                    }, 600);
+                }
+
+            } catch (e) {
+                console.error("Background sync failed:", e);
+                // Fail silently since we already rendered the cache
+                splash.style.display = 'none';
+            }
+        }
+
+        function renderRegions(regions) {
+            const container = document.getElementById('regions-container');
+            container.innerHTML = regions.map(data => `
+                <a href="summary.html?area=${data.id}&name=${encodeURIComponent(data.name)}" 
+                class="region-item group flex items-center justify-between w-full neo-border p-4 bg-white hover:bg-black hover:text-white transition-colors text-black">
+                    <div>
+                        <span class="font-body font-bold block region-name uppercase">${data.name}</span>
+                        <span class="font-data-mono text-xs text-secondary group-hover:text-zinc-400 block mt-1">Lagos</span>
+                    </div>
+                    <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </a>
+            `).join('');
+        }
+
+        async function loadAutocomplete() {
+            const q = query(collection(db, "suggestions"), where("status", "==", "pending"));
+            const snap = await getDocs(q);
+            const datalist = document.getElementById('suggestion-list');
+            datalist.innerHTML = '';
+            existingSuggestions = [];
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                existingSuggestions.push({ id: docSnap.id, name: data.name });
+                const opt = document.createElement('option');
+                opt.value = data.name;
+                datalist.appendChild(opt);
+            });
+        }
+
+        window.submitSuggestion = async function () {
+            const input = document.getElementById('suggestInput');
+            const btn = document.getElementById('suggestBtn');
+            const val = input.value.trim();
+            if (!val) return;
+            btn.innerText = "WAIT...";
+            btn.disabled = true;
+            try {
+                const match = existingSuggestions.find(s => s.name.toLowerCase() === val.toLowerCase());
+                if (match) {
+                    await updateDoc(doc(db, "suggestions", match.id), { requestCount: increment(1) });
+                } else {
+                    await addDoc(collection(db, "suggestions"), {
+                        name: val, status: "pending", requestCount: 1, createdAt: serverTimestamp(), userId: auth.currentUser.uid
+                    });
+                }
+                input.value = "";
+                btn.innerText = "SENT!";
+                setTimeout(() => { btn.innerText = "SUGGEST"; btn.disabled = false; }, 3000);
+                loadAutocomplete();
+            } catch (e) { alert("Failed."); btn.innerText = "SUGGEST"; btn.disabled = false; }
+        }
+    </script>
+
+    <script>
+        function filterRegions() {
+            const filter = document.getElementById('searchInput').value.toUpperCase();
+            const items = document.getElementsByClassName('region-item');
+            for (let i = 0; i < items.length; i++) {
+                const txt = items[i].querySelector('.region-name').textContent;
+                items[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Neighborhood Summary - SETWL</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#474747",
+                        "on-primary-fixed": "#1b1b1b",
+                        "on-surface": "#1b1b1b",
+                        "outline": "#7e7576",
+                        "on-tertiary-fixed": "#001356",
+                        "tertiary": "#000000",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#dde1ff",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "on-primary-container": "#848484",
+                        "surface-tint": "#5e5e5e",
+                        "tertiary-container": "#001356",
+                        "surface-container": "#eeeeee",
+                        "on-surface-variant": "#4c4546",
+                        "outline-variant": "#cfc4c5",
+                        "on-secondary-fixed-variant": "#454747",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "secondary-container": "#dfe0e0",
+                        "on-tertiary-fixed-variant": "#0035be",
+                        "surface-variant": "#e2e2e2",
+                        "on-tertiary-container": "#5979ff",
+                        "primary": "#000000",
+                        "secondary": "#5d5f5f",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f1f1f1",
+                        "surface-container-highest": "#e2e2e2",
+                        "error": "#ba1a1a",
+                        "on-background": "#1b1b1b",
+                        "primary-fixed": "#e2e2e2",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "primary-container": "#1b1b1b",
+                        "inverse-primary": "#c6c6c6",
+                        "inverse-surface": "#303030",
+                        "surface-container-high": "#e8e8e8",
+                        "secondary-fixed": "#e2e2e2",
+                        "surface": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#b8c3ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9f9",
+                        "surface-dim": "#dadada",
+                        "surface-bright": "#f9f9f9",
+                        "on-secondary-container": "#616363",
+                        "surface-container-low": "#f3f3f3",
+                        "cobalt": "#0035be"
+                    },
+                    "fontFamily": {
+                        "h2": ["Space Grotesk"],
+                        "wordmark": ["Space Grotesk"],
+                        "h1": ["Space Grotesk"],
+                        "label-caps": ["Space Grotesk"],
+                        "data-mono": ["Space Grotesk"],
+                        "body": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "h2": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "wordmark": ["24px", { "lineHeight": "100%", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "h1": ["48px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "data-mono": ["14px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "h3": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html,
+        body {
+            overflow-x: hidden !important;
+            width: 100%;
+            position: relative;
+        }
+
+        #recaptcha-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .neo-border {
+            border: 2px solid #000000;
+        }
+
+        .neo-border-t {
+            border-top: 2px solid #000000;
+        }
+
+        .neo-border-b {
+            border-bottom: 2px solid #000000;
+        }
+
+        .neo-border-r {
+            border-right: 2px solid #000000;
+        }
+
+        .neo-border-l {
+            border-left: 2px solid #000000;
+        }
+
+        .trust-badge {
+            border: 2px solid #0035be;
+            color: #0035be;
+        }
+
+        .metric-bar {
+            width: 8px;
+            height: 24px;
+            border: 2px solid #000000;
+            margin-right: 4px;
+        }
+
+        .metric-bar.filled {
+            background-color: #0035be;
+            border-color: #0035be;
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-primary font-body antialiased min-h-screen flex flex-col pb-20 md:pb-0">
+    <header
+        class="bg-white dark:bg-black font-['Space_Grotesk'] uppercase tracking-widest font-bold top-0 border-b-2 border-black dark:border-white flex justify-between items-center w-full px-6 h-16 sticky z-50">
+        <a href="index.html"
+            class="flex items-center gap-4 cursor-pointer hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-100 p-2">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <a href="index.html" class="text-2xl font-black tracking-tighter text-black dark:text-white">SETWL</a>
+    </header>
+
+    <div id="empty-state-overlay"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden text-black">
+        <div
+            class="bg-white p-8 max-w-sm w-[90%] text-center neo-border flex flex-col items-center gap-4 relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <button onclick="document.getElementById('empty-state-overlay').classList.add('hidden')"
+                class="absolute top-3 right-3 text-gray-400 hover:text-black transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <span class="material-symbols-outlined text-5xl text-black">location_off</span>
+            <h3 class="text-2xl font-black uppercase tracking-tight">No Logs Yet</h3>
+            <p class="font-mono text-sm text-gray-600 mb-2">This neighborhood is currently a blank slate. Help the
+                community by dropping the first reality check.</p>
+            <button onclick="document.getElementById('empty-state-overlay').classList.add('hidden'); openModal();"
+                class="w-full bg-black text-white py-3 font-bold uppercase neo-border hover:bg-zinc-800 transition-colors">
+                Be the first to add a log
+            </button>
+        </div>
+    </div>
+
+    <main class="flex-grow w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col gap-12">
+        <section class="flex flex-col gap-4">
+            <div class="flex items-center gap-4">
+                <h1 id="region-title" class="font-h1 text-4xl md:text-h1 text-primary uppercase">LOADING...</h1>
+                <div
+                    class="trust-badge font-label-caps text-label-caps px-3 py-1 uppercase tracking-widest inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]"
+                        style="font-variation-settings: 'FILL' 1;">verified</span>
+                    VERIFIED ZONE
+                </div>
+            </div>
+            <p id="region-subtitle" class="font-data-mono text-xs text-secondary uppercase tracking-[0.2em]">LAGOS,
+                NIGERIA // ZONE ID: <span id="zone-id-display">--</span> // <span id="log-count-display">--</span>
+                REPORTS
+            </p>
+        </section>
+
+        <section class="neo-border bg-white flex flex-col md:flex-row text-black">
+            <div
+                class="w-full md:w-1/3 p-6 md:p-8 neo-border-b md:neo-border-b-0 md:neo-border-r bg-surface-container-low flex flex-col justify-center">
+                <h2 class="font-h2 text-h2 text-primary mb-2">TRUST SUMMARY</h2>
+                <p class="font-body text-body text-secondary">Aggregated qualitative data from people who frequent the
+                    area or live there.</p>
+            </div>
+
+            <div class="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-0">
+                <div class="p-6 neo-border-b sm:neo-border-r flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-data-mono text-data-mono text-primary uppercase">Electricity</span>
+                        <span id="summary-power-val"
+                            class="font-data-mono text-data-mono text-on-primary-container">--/5</span>
+                    </div>
+                    <div class="flex" id="summary-power-bars">
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                    </div>
+                </div>
+                <div class="p-6 neo-border-b flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-data-mono text-data-mono text-primary uppercase">Water Quality</span>
+                        <span id="summary-water-val"
+                            class="font-data-mono text-data-mono text-on-primary-container">--/5</span>
+                    </div>
+                    <div class="flex" id="summary-water-bars">
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                    </div>
+                </div>
+                <div class="p-6 neo-border-b sm:neo-border-r flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-data-mono text-data-mono text-primary uppercase">Security</span>
+                        <span id="summary-security-val"
+                            class="font-data-mono text-data-mono text-on-primary-container">--/5</span>
+                    </div>
+                    <div class="flex" id="summary-security-bars">
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                    </div>
+                </div>
+                <div class="p-6 neo-border-b flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-data-mono text-data-mono text-primary uppercase">Drainage / Flooding</span>
+                        <span id="summary-drainage-val"
+                            class="font-data-mono text-data-mono text-on-primary-container">--/5</span>
+                    </div>
+                    <div class="flex" id="summary-drainage-bars">
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                    </div>
+                </div>
+                <div class="p-6 sm:neo-border-r flex flex-col gap-4 sm:col-span-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-data-mono text-data-mono text-primary uppercase">Serenity / Noise Level</span>
+                        <span id="summary-serenity-val"
+                            class="font-data-mono text-data-mono text-on-primary-container">--/5</span>
+                    </div>
+                    <div class="flex" id="summary-serenity-bars">
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                        <div class="metric-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="flex flex-col gap-6">
+            <div class="neo-border-b pb-4 flex justify-between items-end">
+                <h3 class="font-h3 text-h3 text-primary uppercase">COMMUNITY LOG</h3>
+                <span class="font-data-mono text-data-mono text-secondary">LATEST REPORTS</span>
+            </div>
+            <div id="logs-container" class="flex flex-col gap-6 relative">
+            </div>
+            <button onclick="openModal()"
+                class="w-full neo-border bg-surface-container-low text-primary font-label-caps text-label-caps uppercase py-4 hover:bg-black hover:text-white transition-colors duration-100 flex items-center justify-center gap-2 mt-4">
+                <span class="material-symbols-outlined">add</span> DROP A GIST
+            </button>
+        </section>
+    </main>
+
+    <div id="logModal"
+        class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-4 md:p-0 text-black">
+        <div class="bg-white dark:bg-zinc-950 w-full max-w-2xl border-4 border-black dark:border-white shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,1)] flex flex-col max-h-[90vh] overflow-y-auto transform transition-all scale-95 opacity-0"
+            id="modalContent">
+            <div
+                class="sticky top-0 bg-white dark:bg-zinc-950 border-b-2 border-black dark:border-white p-4 flex justify-between items-center z-10">
+                <h2 class="font-h3 text-xl uppercase tracking-tight" id="modalTitle">Contribute</h2>
+                <button onclick="closeModal()"
+                    class="hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black p-1 transition-colors">
+                    <span class="material-symbols-outlined block">close</span>
+                </button>
+            </div>
+
+            <div id="state-select-area" class="p-6 space-y-6 flex-shrink-0">
+                <div class="bg-surface-container-low border-2 border-black p-4">
+                    <p class="font-data-mono text-sm">To unlock all community logs, drop a review for any area you know
+                        well.</p>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase block">Which area are you reviewing?</label>
+                    <select id="reviewAreaSelect"
+                        class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
+                    </select>
+                </div>
+                <button onclick="goToState('form')"
+                    class="w-full bg-cobalt text-white font-label-caps uppercase tracking-widest py-4 hover:bg-blue-800 transition-colors neo-border">
+                    Continue to Ratings
+                </button>
+            </div>
+
+            <div id="state-form" class="hidden p-6 space-y-8 flex-shrink-0">
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase flex justify-between items-center">
+                        <div class="group relative flex items-center gap-1 cursor-help">
+                            <span>⚡ Power</span>
+                            <span
+                                class="material-symbols-outlined text-[14px] text-outline hover:text-black transition-colors">info</span>
+                            <div
+                                class="absolute bottom-full left-0 mb-2 w-48 p-2 bg-black text-white font-data-mono text-[10px] leading-tight normal-case hidden group-hover:block z-50">
+                                Rate the stability of grid electricity and frequency of outages.
+                            </div>
+                        </div>
+                        <span id="power-val" class="text-cobalt">-</span>
+                    </label>
+                    <div class="flex gap-1 metric-group" data-metric="power">
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">1</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">2</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">3</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">4</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">5</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase flex justify-between items-center">
+                        <div class="group relative flex items-center gap-1 cursor-help">
+                            <span>💧 Water</span>
+                            <span
+                                class="material-symbols-outlined text-[14px] text-outline hover:text-black transition-colors">info</span>
+                            <div
+                                class="absolute bottom-full left-0 mb-2 w-48 p-2 bg-black text-white font-data-mono text-[10px] leading-tight normal-case hidden group-hover:block z-50">
+                                Cleanliness and availability of running water (borehole or mains).
+                            </div>
+                        </div>
+                        <span id="water-val" class="text-cobalt">-</span>
+                    </label>
+                    <div class="flex gap-1 metric-group" data-metric="water">
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">1</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">2</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">3</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">4</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">5</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase flex justify-between items-center">
+                        <div class="group relative flex items-center gap-1 cursor-help">
+                            <span>🛡️ Security</span>
+                            <span
+                                class="material-symbols-outlined text-[14px] text-outline hover:text-black transition-colors">info</span>
+                            <div
+                                class="absolute bottom-full left-0 mb-2 w-48 p-2 bg-black text-white font-data-mono text-[10px] leading-tight normal-case hidden group-hover:block z-50">
+                                General safety, street lighting, and neighborhood patrols.
+                            </div>
+                        </div>
+                        <span id="security-val" class="text-cobalt">-</span>
+                    </label>
+                    <div class="flex gap-1 metric-group" data-metric="security">
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">1</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">2</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">3</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">4</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">5</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase flex justify-between items-center">
+                        <div class="group relative flex items-center gap-1 cursor-help">
+                            <span>🌊Drainage (How well Does the area cope with flooding)</span>
+                            <span
+                                class="material-symbols-outlined text-[14px] text-outline hover:text-black transition-colors">info</span>
+                            <div
+                                class="absolute bottom-full left-0 mb-2 w-48 p-2 bg-black text-white font-data-mono text-[10px] leading-tight normal-case hidden group-hover:block z-50">
+                                Does the area handle rain well? Rate 5 for zero flooding.
+                            </div>
+                        </div>
+                        <span id="drainage-val" class="text-cobalt">-</span>
+                    </label>
+                    <div class="flex gap-1 metric-group" data-metric="drainage">
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">1</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">2</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">3</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">4</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">5</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase flex justify-between items-center">
+                        <div class="group relative flex items-center gap-1 cursor-help">
+                            <span>🍃 Serenity</span>
+                            <span
+                                class="material-symbols-outlined text-[14px] text-outline hover:text-black transition-colors">info</span>
+                            <div
+                                class="absolute bottom-full left-0 mb-2 w-56 p-2 bg-black text-white font-data-mono text-[10px] leading-tight normal-case hidden group-hover:block z-50">
+                                Noise from traffic, generators, clubs, or worship centers.
+                            </div>
+                        </div>
+                        <span id="serenity-val" class="text-cobalt">-</span>
+                    </label>
+                    <div class="flex gap-1 metric-group" data-metric="serenity">
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">1</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">2</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">3</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">4</button>
+                        <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">5</button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase">The Gist (Optional)</label>
+                    <textarea
+                        class="w-full h-24 neo-border bg-transparent p-4 font-data-mono focus:outline-none focus:border-cobalt"
+                        placeholder="e.g., Floods heavily on Admiralty way..."></textarea>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="goToState('select-area')"
+                        class="w-1/3 bg-surface-container-high py-4 neo-border font-bold uppercase text-xs">Back</button>
+                    <button onclick="validateFormAndNext()"
+                        class="w-2/3 bg-cobalt text-white py-4 neo-border font-bold uppercase text-xs">Review &
+                        Next</button>
+                </div>
+            </div>
+
+            <div id="state-otp" class="hidden p-6 space-y-6 flex-shrink-0">
+                <div class="bg-yellow-100 border-2 border-black p-4">
+                    <p class="font-data-mono"><strong>Final Step:</strong> Verify your number to permanently unlock all
+                        logs.</p>
+                </div>
+                <div id="phone-input-section" class="space-y-4">
+                    <div class="flex neo-border">
+                        <span class="p-4 bg-surface-container-high border-r-2 border-black font-data-mono">+234</span>
+                        <input type="tel" id="phoneNumber"
+                            class="w-full bg-transparent p-4 font-data-mono focus:outline-none"
+                            placeholder="801 234 5678">
+                    </div>
+                    <div id="recaptcha-container"></div>
+                    <button id="sendCodeBtn" onclick="window.sendOTP()"
+                        class="w-full bg-black text-white py-3 neo-border font-bold uppercase">Send Code</button>
+                </div>
+                <div id="code-input-section" class="space-y-4 hidden pt-4 border-t-2 border-black border-dashed">
+                    <input type="text" id="verificationCode"
+                        class="w-full neo-border p-4 font-data-mono text-center text-xl tracking-widest"
+                        placeholder="------">
+                    <div class="flex gap-4">
+                        <button onclick="goToState('form')"
+                            class="w-1/3 bg-surface-container-high py-4 neo-border font-bold uppercase text-xs">Back</button>
+                        <button id="verifyBtn" onclick="window.verifyOTPAndSubmit()"
+                            class="w-2/3 bg-cobalt text-white py-4 neo-border font-bold uppercase text-xs">Verify &
+                            Publish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('logModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalTitle = document.getElementById('modalTitle');
+        const states = {
+            'select-area': { el: document.getElementById('state-select-area'), title: 'Select Area' },
+            'form': { el: document.getElementById('state-form'), title: 'Rate the Reality' },
+            'otp': { el: document.getElementById('state-otp'), title: 'Verify Human' }
+        };
+        const safeParse = (id) => {
+            const el = document.getElementById(id);
+            return el ? parseInt(el.innerText.charAt(0)) : null;
+        };
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+                goToState('select-area');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function goToState(stateId) {
+            Object.values(states).forEach(s => s.el.classList.add('hidden'));
+            states[stateId].el.classList.remove('hidden');
+            modalTitle.innerText = states[stateId].title;
+        }
+
+        document.querySelectorAll('.metric-group').forEach(group => {
+            const buttons = group.querySelectorAll('button');
+            const metricName = group.getAttribute('data-metric');
+            const valueDisplay = document.getElementById(`${metricName}-val`);
+            buttons.forEach((btn, index) => {
+                btn.onclick = () => {
+                    const rating = index + 1;
+                    valueDisplay.innerText = `${rating}/5`;
+                    buttons.forEach((b, i) => {
+                        if (i <= index) { b.classList.add('bg-black', 'text-white'); }
+                        else { b.classList.remove('bg-black', 'text-white'); }
+                    });
+                };
+            });
+        });
+
+        function validateFormAndNext() {
+            const selectedAreaId = document.getElementById('reviewAreaSelect').value;
+            const allLogs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+            const currentUser = window.auth ? window.auth.currentUser : null;
+
+            if (!currentUser) {
+                alert("Session error. Please refresh and try again.");
+                return;
+            }
+
+            const alreadyReviewed = allLogs.some(log =>
+                log.areaId === selectedAreaId && log.userId === currentUser.uid
+            );
+
+            if (alreadyReviewed) {
+                alert("You've already dropped a gist for this area!");
+                return;
+            }
+
+            if (!safeParse('power-val') || !safeParse('water-val') || !safeParse('security-val') || !safeParse('drainage-val') || !safeParse('serenity-val')) {
+                alert("Please rate all categories.");
+                return;
+            }
+
+            if (window.hasContributed) {
+                window.publishReview();
+            } else {
+                goToState('otp');
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6Qke--ciCPKdzDrh4kuYf0Dl6wq635Nw",
+            authDomain: "setwl-62f51.firebaseapp.com",
+            projectId: "setwl-62f51",
+            storageBucket: "setwl-62f51.firebasestorage.app",
+            messagingSenderId: "569446349318",
+            appId: "1:569446349318:web:70b3d0f22f7cb8601fe187"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        window.auth = auth;
+
+        const logsContainer = document.getElementById('logs-container');
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentArea = (urlParams.get('area') || 'lk-01').trim().toLowerCase();
+        const currentName = urlParams.get('name') || 'Lekki Phase 1';
+        let hasContributed = localStorage.getItem('setu_verified') === 'true';
+        window.hasContributed = hasContributed;
+
+        let confirmationResult = null;
+
+        document.getElementById('region-title').innerText = currentName;
+
+        function updateSummaryMetric(metric, avgValue) {
+            const rounded = Math.round(avgValue);
+            const valEl = document.getElementById(`summary-${metric}-val`);
+            const barsContainer = document.getElementById(`summary-${metric}-bars`);
+            if (valEl) valEl.innerText = `${avgValue.toFixed(1)}/5`;
+            if (barsContainer) {
+                const bars = barsContainer.querySelectorAll('.metric-bar');
+                bars.forEach((bar, index) => bar.classList.toggle('filled', index < rounded));
+            }
+        }
+
+        function loadFromCache() {
+            // 1. Pull data from cache
+            const allLogs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+            const allRegions = JSON.parse(localStorage.getItem('setu_regions') || "[]");
+
+            const areaLogs = allLogs.filter(log => log.areaId === currentArea);
+
+            // 2. POPULATE DROPDOWN FIRST (So it works even if there are 0 logs)
+            const selectEl = document.getElementById('reviewAreaSelect');
+            if (selectEl) {
+                selectEl.innerHTML = allRegions.map(r =>
+                    `<option value="${r.id}" ${r.id === currentArea ? 'selected' : ''}>${r.name}</option>`
+                ).join('');
+            }
+
+            // 3. Update Header Info
+            const zoneEl = document.getElementById('zone-id-display');
+            const countEl = document.getElementById('log-count-display');
+            if (zoneEl) zoneEl.innerText = currentArea.toUpperCase();
+            if (countEl) countEl.innerText = areaLogs.length;
+
+            if (areaLogs.length === 0) {
+                document.getElementById('empty-state-overlay').classList.remove('hidden');
+                // Reset metrics display
+                ['power', 'water', 'security', 'drainage', 'serenity'].forEach(m => updateSummaryMetric(m, 0));
+                logsContainer.innerHTML = `<div class="p-6 text-center text-secondary font-data-mono neo-border bg-white italic">Numerical ratings are in, but no one has dropped a gist yet.</div>`;
+                return;
+            }
+            document.getElementById('empty-state-overlay').classList.add('hidden');
+
+            // 4. CALCULATE METRICS
+            const metrics = ['power', 'water', 'security', 'drainage', 'serenity'];
+            const totals = areaLogs.reduce((acc, log) => {
+                metrics.forEach(m => {
+                    const val = log[m + 'Rating'] || 0;
+                    acc[m] += val;
+                });
+                return acc;
+            }, { power: 0, water: 0, security: 0, drainage: 0, serenity: 0 });
+
+            const totalCount = areaLogs.length;
+            metrics.forEach(m => {
+                updateSummaryMetric(m, totals[m] / totalCount);
+            });
+
+            // 5. RENDER LOGS (Filtering for comments)
+            const logsWithComments = areaLogs.filter(log => log.comment && log.comment.trim() !== "");
+            logsContainer.innerHTML = '';
+
+            if (logsWithComments.length === 0) {
+                logsContainer.innerHTML = `<div class="p-6 text-center text-secondary font-data-mono neo-border bg-white italic">Numerical ratings are in, but no one has dropped a gist yet.</div>`;
+            }
+
+            logsWithComments.forEach((log, index) => {
+                const dateStr = log.createdAt?.seconds ? new Date(log.createdAt.seconds * 1000).toLocaleDateString('en-GB') : 'Recent';
+
+                // RESTORED LOCK OVERLAY HTML
+                if (index >= 2 && !hasContributed) {
+                    if (index === 2) {
+                        logsContainer.innerHTML += `
+                        <div class="relative overflow-hidden neo-border p-6 bg-white h-48 mt-2">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-white via-white/90 to-transparent p-6 text-center">
+                                <span class="material-symbols-outlined text-cobalt text-3xl mb-2">lock</span>
+                                <h4 class="font-h3 text-h3 text-primary uppercase mb-2 text-black">Unlock Feed</h4>
+                                <p class="font-data-mono text-secondary text-xs mb-4">Drop a review to unlock the full community gist.</p>
+                                <button onclick="openModal()" class="bg-cobalt text-white font-label-caps uppercase py-3 px-6 neo-border mt-4 text-xs">Drop a Gist</button>
+                            </div>
+                        </div>`;
+                    }
+                    return;
+                }
+
+                logsContainer.innerHTML += `
+                <div class="neo-border bg-white p-6 text-black">
+                    <div class="flex justify-between items-center mb-4 border-b-2 border-dashed border-outline-variant pb-4">
+                        <span class="font-label-caps text-[10px] uppercase bg-black text-white px-3 py-1">Resident Gist</span>
+                        <span class="font-data-mono text-xs text-secondary">${dateStr}</span>
+                    </div>
+                    <p class="font-body text-primary leading-relaxed">${log.comment}</p>
+                </div>`;
+            });
+        }
+
+        // Initial render
+        loadFromCache();
+
+        window.sendOTP = function () {
+            const phone = document.getElementById('phoneNumber').value.trim();
+            if (!phone) return alert("Enter number");
+
+            const fullNum = `+234${phone.replace(/^0+/, '')}`;
+
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    'size': 'invisible'
+                });
+            }
+
+            signInWithPhoneNumber(auth, fullNum, window.recaptchaVerifier)
+                .then((r) => {
+                    confirmationResult = r;
+                    document.getElementById('phone-input-section').classList.add('hidden');
+                    document.getElementById('code-input-section').classList.remove('hidden');
+                })
+                .catch(e => {
+                    console.error("SMS Error:", e);
+                    // This will show the real error (e.g., auth/unauthorized-domain)
+                    alert(`Error: ${e.code || e.message}`);
+
+                    // Critical: Reset reCAPTCHA if it fails so they can try again
+                    if (window.recaptchaVerifier) {
+                        window.recaptchaVerifier.render().then(widgetId => {
+                            grecaptcha.reset(widgetId);
+                        });
+                    }
+                });
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // If we don't have it in cache, check Firestore
+                if (localStorage.getItem('setu_verified') !== 'true') {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists() && userDoc.data().hasContributed) {
+                        localStorage.setItem('setu_verified', 'true');
+                        window.hasContributed = true;
+                        loadFromCache(); // Re-render to unlock logs
+                    }
+                }
+            }
+        });
+
+        // NEW: Dedicated Publishing Function
+        window.publishReview = async function () {
+            const btn = document.getElementById('verifyBtn');
+            const formBtn = document.querySelector('[onclick="validateFormAndNext()"]');
+            const user = auth.currentUser;
+            const selectedAreaId = document.getElementById('reviewAreaSelect').value;
+            const logs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+
+            if (logs.some(l => l.areaId === selectedAreaId && l.userId === user.uid)) {
+                alert("System detected an existing log. Duplicate blocked.");
+                closeModal();
+                return;
+            }
+
+            const newLog = {
+                areaId: selectedAreaId,
+                powerRating: safeParse('power-val'),
+                waterRating: safeParse('water-val'),
+                securityRating: safeParse('security-val'),
+                drainageRating: safeParse('drainage-val'),
+                serenityRating: safeParse('serenity-val'),
+                comment: document.querySelector('textarea').value,
+                userId: user.uid,
+                createdAt: { seconds: Math.floor(Date.now() / 1000) }
+            };
+
+            const alreadyReviewed = logs.some(l => l.areaId === selectedAreaId && l.userId === user.uid);
+
+            if (alreadyReviewed) {
+                alert("System detected an existing log for this area. Duplicate entry blocked.");
+                closeModal();
+                return;
+            }
+
+            // UI Feedback
+            const activeBtn = document.getElementById('state-otp').classList.contains('hidden') ? formBtn : btn;
+            const originalText = activeBtn.innerText;
+            activeBtn.innerText = "Publishing...";
+            activeBtn.disabled = true;
+
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("No user session");
+
+                const safeParse = (id) => parseInt(document.getElementById(id).innerText.charAt(0));
+                const selectedAreaId = document.getElementById('reviewAreaSelect').value;
+
+                // 1. Write to Firestore
+                await addDoc(collection(db, "logs"), { ...newLog, createdAt: serverTimestamp() });
+
+                // 2. Ensure they are marked as contributor if they aren't already
+                if (!window.hasContributed) {
+                    await setDoc(doc(db, "users", user.uid), {
+                        hasContributed: true,
+                        phone: user.phoneNumber || "verified"
+                    }, { merge: true });
+                    localStorage.setItem('setu_verified', 'true');
+                    window.hasContributed = true;
+                }
+
+                // 3. Update Local Cache
+                const logs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+                logs.unshift(newLog);
+                localStorage.setItem('setu_logs', JSON.stringify(logs));
+
+                closeModal();
+                loadFromCache();
+
+                // Reset Button
+                activeBtn.innerText = originalText;
+                activeBtn.disabled = false;
+
+            } catch (e) {
+                console.error(e);
+                alert("Submission failed. Please try again.");
+                activeBtn.innerText = originalText;
+                activeBtn.disabled = false;
+            }
+        };
+
+        // Update OTP verification to use the shared publish function
+        window.verifyOTPAndSubmit = async function () {
+            const code = document.getElementById('verificationCode').value;
+            if (!code || !confirmationResult) return;
+
+            try {
+                await confirmationResult.confirm(code);
+                window.publishReview(); // Call the shared function after successful OTP
+            } catch (e) {
+                alert("Invalid code.");
+            }
+        };
+    </script>
+</body>
+
+</html>
