@@ -34,6 +34,15 @@
             }
         }
     </script>
+    <script>
+            // Force redirect to custom domain for SEO and branding
+            (function () {
+                const customDomain = 'setwl.com.ng';
+                if (window.location.hostname !== customDomain && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+                    window.location.replace('https://' + customDomain + window.location.pathname + window.location.search);
+                }
+            })();
+    </script>
     <style>
         .neo-border {
             border: 2px solid #000000;
