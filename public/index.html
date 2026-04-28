@@ -52,6 +52,10 @@
         body {
             min-height: max(884px, 100dvh);
         }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 
@@ -71,7 +75,7 @@
     </div>
 
     <script>
-        if (sessionStorage.getItem('setu_session_active')) {
+        if (sessionStorage.getItem('setwl_session_active')) {
             document.getElementById('splash-screen').style.display = 'none';
         }
     </script>
@@ -82,9 +86,10 @@
             <span class="material-symbols-outlined">menu</span>
         </div>
         <div class="text-2xl font-black tracking-tighter text-black">SETWL</div>
-        <div
-            class="flex items-center gap-4 cursor-pointer hover:bg-black hover:text-white transition-colors duration-100 p-2">
-            <span class="material-symbols-outlined">account_circle</span>
+        <div class="inline-flex items-center gap-3 neo-border bg-white px-4 py-2">
+            <span class="material-symbols-outlined text-cobalt text-lg">forum</span>
+            <span class="font-h3 text-xs uppercase text-primary">Total Gists:</span>
+            <span id="global-log-counter" class="font-data-mono text-lg font-bold text-black">--</span>
         </div>
     </header>
 
@@ -95,14 +100,23 @@
             <p class="font-data-mono text-secondary text-sm md:text-base">Don't trust the agent. Read verified logs from
                 residents before you pay.</p>
         </div>
+        <div id="leaderboard-section" class="mb-8 hidden">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="material-symbols-outlined text-cobalt text-xl">local_fire_department</span>
+                <h2 class="font-h3 text-primary uppercase text-sm tracking-wider">Top Rated Hubs</h2>
+            </div>
+            <div id="leaderboard-cards" class="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
+            </div>
+        </div>
 
         <div class="w-full relative mt-4">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-black">
+            <!-- <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-black">
                 <span class="material-symbols-outlined text-secondary">search</span>
-            </div>
+            </div> -->
             <input type="text" id="searchInput" onkeyup="filterRegions()"
-                class="w-full neo-border bg-white py-4 pl-12 pr-4 font-data-mono focus:outline-none focus:border-cobalt focus:ring-0 placeholder:text-secondary text-black"
-                placeholder="Search a curated hub (e.g. Yaba, Lekki)...">
+                placeholder=" ... Search for a Hub or Neighborhood (e.g. Ogba, Akoka...)"
+                class="w-full neo-border p-4 bg-white font-data-mono focus:outline-none focus:border-cobalt">
+            <div id="no-results-msg"></div>
         </div>
 
         <div class="w-full flex flex-col gap-4">
@@ -112,15 +126,37 @@
 
             <div class="mt-8 p-6 neo-border bg-surface-container-low border-dashed text-black">
                 <h4 class="font-h3 text-lg font-bold uppercase mb-2">Can't find your area?</h4>
-                <p class="font-data-mono text-secondary text-sm mb-4">Request a new hub. We verify and add neighborhoods
-                    weekly.</p>
-                <div class="flex gap-2">
-                    <input type="text" id="suggestInput" list="suggestion-list"
-                        class="w-full neo-border bg-white p-3 font-data-mono focus:outline-none focus:border-cobalt"
-                        placeholder="e.g. Gbagada Phase 1">
-                    <datalist id="suggestion-list"></datalist>
+                <p class="font-data-mono text-secondary text-sm mb-4">Request a new neighborhood or a completely new
+                    major hub.</p>
+
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-2">
+                        <select id="suggestParentHub" onchange="window.toggleNewHubField()"
+                            class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none focus:border-cobalt appearance-none cursor-pointer">
+                            <option value="" disabled selected>-- Select Major Hub --</option>
+                            <option value="NEW_HUB" class="font-bold text-cobalt">+ Suggest a totally new Hub</option>
+                        </select>
+
+                        <div id="newHubNameContainer" class="hidden flex flex-col gap-1 transition-all">
+                            <label class="font-label-caps text-[10px] uppercase text-cobalt">New Major Hub Name</label>
+                            <input type="text" id="newHubNameInput"
+                                class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none border-cobalt shadow-[2px_2px_0px_0px_rgba(0,53,190,1)]"
+                                placeholder="e.g. Mowe / Ibafo">
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label id="subregionLabel" class="font-label-caps text-[10px] uppercase hidden">Neighborhood
+                                Name</label>
+                            <input type="text" id="suggestInput"
+                                class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none focus:border-cobalt"
+                                placeholder="Neighborhood Name (e.g. Akoka)">
+                        </div>
+                    </div>
+
                     <button onclick="window.submitSuggestion()" id="suggestBtn"
-                        class="bg-black text-white font-label-caps uppercase px-6 hover:bg-zinc-800 transition-colors neo-border whitespace-nowrap">Suggest</button>
+                        class="w-full bg-black text-white font-label-caps uppercase py-4 hover:bg-zinc-800 transition-colors neo-border">
+                        Submit Request
+                    </button>
                 </div>
             </div>
         </div>
@@ -147,8 +183,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, increment, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
+        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, increment, query, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB6Qke--ciCPKdzDrh4kuYf0Dl6wq635Nw",
@@ -162,12 +200,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const analytics = getAnalytics(app);
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider('6LcNUc0sAAAAAMNGsQfGTZn85dRxMP9ZRIC_Vmz2'),
+            isTokenAutoRefreshEnabled: true // Allows the token to refresh automatically in the background
+        });
 
         let existingSuggestions = [];
 
         signInAnonymously(auth).then(() => {
             loadAutocomplete();
             syncAppData();
+            fetchTotalLogsCount();
         });
 
         async function syncAppData() {
@@ -175,11 +219,14 @@
             const splash = document.getElementById('splash-screen');
 
             // 1. INSTANT HYDRATION: Draw from cache immediately so the screen isn't empty
-            const cachedRegions = JSON.parse(localStorage.getItem('setu_regions'));
+            const cachedRegions = JSON.parse(localStorage.getItem('setwl_regions'));
+            const cachedLogs = JSON.parse(localStorage.getItem('setwl_logs'));
             if (cachedRegions) {
                 renderRegions(cachedRegions);
+                loadAutocomplete();
+                if (cachedLogs) renderLeaderboard();
                 // If we've already seen the splash this session, kill it immediately
-                if (sessionStorage.getItem('setu_session_active')) {
+                if (sessionStorage.getItem('setwl_session_active')) {
                     splash.style.display = 'none';
                 }
             }
@@ -187,29 +234,33 @@
             // 2. BACKGROUND SYNC: Always check for new regions/logs
             try {
                 // If it's a cold start (no session), show progress on the loader
-                if (!sessionStorage.getItem('setu_session_active')) {
+                if (!sessionStorage.getItem('setwl_session_active')) {
                     loader.style.width = "20%";
                 }
 
                 // Fetch Regions
                 const regionsSnap = await getDocs(collection(db, "regions"));
+                const subregionsSnap = await getDocs(collection(db, "subregions"));
                 const regions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Fetch All Logs
                 const logsSnap = await getDocs(collection(db, "logs"));
                 const logs = logsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const subregions = subregionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Update Local Storage
-                localStorage.setItem('setu_regions', JSON.stringify(regions));
-                localStorage.setItem('setu_logs', JSON.stringify(logs));
+                localStorage.setItem('setwl_regions', JSON.stringify(regions));
+                localStorage.setItem('setwl_logs', JSON.stringify(logs));
+                localStorage.setItem('setwl_subregions', JSON.stringify(subregions))
 
                 // Re-render UI with the fresh data (catches new regions)
                 renderRegions(regions);
+                renderLeaderboard();
 
                 // Handle Splash Screen exit
-                if (!sessionStorage.getItem('setu_session_active')) {
+                if (!sessionStorage.getItem('setwl_session_active')) {
                     loader.style.width = "100%";
-                    sessionStorage.setItem('setu_session_active', 'true');
+                    sessionStorage.setItem('setwl_session_active', 'true');
                     setTimeout(() => {
                         splash.classList.add('opacity-0', 'pointer-events-none');
                     }, 600);
@@ -222,68 +273,264 @@
             }
         }
 
+        // function renderRegions(regions) {
+        //     const container = document.getElementById('regions-container');
+        //     container.innerHTML = regions.map(data => `
+        //         <a href="summary.html?area=${data.id}&name=${encodeURIComponent(data.name)}" 
+        //         class="region-item group flex items-center justify-between w-full neo-border p-4 bg-white hover:bg-black hover:text-white transition-colors text-black">
+        //             <div>
+        //                 <span class="font-body font-bold block region-name uppercase">${data.name}</span>
+        //                 <span class="font-data-mono text-xs text-secondary group-hover:text-zinc-400 block mt-1">Lagos</span>
+        //             </div>
+        //             <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+        //         </a>
+        //     `).join('');
+        // }
+
         function renderRegions(regions) {
             const container = document.getElementById('regions-container');
-            container.innerHTML = regions.map(data => `
-                <a href="summary.html?area=${data.id}&name=${encodeURIComponent(data.name)}" 
-                class="region-item group flex items-center justify-between w-full neo-border p-4 bg-white hover:bg-black hover:text-white transition-colors text-black">
-                    <div>
-                        <span class="font-body font-bold block region-name uppercase">${data.name}</span>
-                        <span class="font-data-mono text-xs text-secondary group-hover:text-zinc-400 block mt-1">Lagos</span>
+            const allSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
+
+            container.innerHTML = regions.map(region => {
+                // Find neighborhoods belonging to this hub
+                const subs = allSubregions.filter(s => s.regionId === region.id);
+                const subsList = subs.map(s => s.name).join(', ');
+                const subsPreview = subs.length > 0
+                    ? `<p class="text-[10px] text-secondary uppercase mt-2 font-data-mono truncate sub-list">Includes: ${subsList}</p>`
+                    : '';
+                return `
+                <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
+                    class="region-item bg-white neo-border p-6 cursor-pointer hover:bg-black hover:text-white transition-all group hover:bg-black hover:text-white transition-colors text-black w-full">
+                    <div class="flex justify-between items-start">
+                        <h3 class="region-name font-body font-bold block region-name uppercase">${region.name}</h3>
+                        <span class="material-symbols-outlined text-cobalt group-hover:text-white">arrow_forward</span>
                     </div>
-                    <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                </a>
-            `).join('');
+                    ${subsPreview}
+                </div>
+            `;
+            }).join('');
         }
 
-        async function loadAutocomplete() {
-            const q = query(collection(db, "suggestions"), where("status", "==", "pending"));
-            const snap = await getDocs(q);
-            const datalist = document.getElementById('suggestion-list');
-            datalist.innerHTML = '';
-            existingSuggestions = [];
-            snap.forEach(docSnap => {
-                const data = docSnap.data();
-                existingSuggestions.push({ id: docSnap.id, name: data.name });
-                const opt = document.createElement('option');
-                opt.value = data.name;
-                datalist.appendChild(opt);
+        function renderLeaderboard() {
+            const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
+            const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+
+            // 1. Calculate stats for each area
+            const areaStats = {};
+            logs.forEach(log => {
+                if (!areaStats[log.areaId]) {
+                    areaStats[log.areaId] = { totalScore: 0, count: 0 };
+                }
+
+                // Average the 5 categories for this specific log
+                const logAverage = (
+                    (log.powerRating || 0) +
+                    (log.waterRating || 0) +
+                    (log.securityRating || 0) +
+                    (log.drainageRating || 0) +
+                    (log.serenityRating || 0)
+                ) / 5;
+
+                areaStats[log.areaId].totalScore += logAverage;
+                areaStats[log.areaId].count += 1;
             });
+
+            // 2. Map stats back to regions and sort
+            const leaderboard = regions.map(region => {
+                const stats = areaStats[region.id];
+                // Calculate the final aggregate average for the region
+                const avgScore = stats ? (stats.totalScore / stats.count).toFixed(1) : 0;
+                return {
+                    ...region,
+                    score: parseFloat(avgScore),
+                    reviewCount: stats ? stats.count : 0
+                };
+            })
+                .filter(r => r.reviewCount > 0) // Only rank places that actually have reviews
+                .sort((a, b) => b.score - a.score) // Sort highest score to lowest
+                .slice(0, 3); // Grab the Top 3
+
+            // 3. Render the UI
+            const section = document.getElementById('leaderboard-section');
+            const container = document.getElementById('leaderboard-cards');
+
+            if (leaderboard.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            container.innerHTML = leaderboard.map((region, index) => {
+                // Different colors for 1st, 2nd, 3rd
+                const rankColors = ['bg-cobalt', 'bg-black', 'bg-gray-400'];
+                const badgeColor = rankColors[index] || 'bg-black';
+
+                return `
+                <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
+                    class="min-w-[160px] snap-start neo-border bg-white p-4 cursor-pointer transition-transform active:scale-95 flex-shrink-0 relative overflow-hidden">
+                    <div class="${badgeColor} text-white font-data-mono text-[10px] px-2 py-1 inline-block mb-3 border border-black">
+                        #${index + 1} OVERALL
+                    </div>
+                    <h3 class="font-h3 uppercase text-sm truncate mb-1" title="${region.name}">${region.name}</h3>
+                    <div class="flex items-end justify-between mt-2">
+                        <span class="font-data-mono text-lg font-bold">⭐ ${region.score}</span>
+                        <span class="text-[10px] text-secondary uppercase tracking-wider">${region.reviewCount} gists</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function loadAutocomplete() {
+            const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+            const select = document.getElementById('suggestParentHub');
+
+            // Keep the first "Select" and last "New Hub" options, only refresh the middle
+            const firstOption = select.options[0];
+            const lastOption = select.options[select.options.length - 1];
+
+            select.innerHTML = '';
+            select.appendChild(firstOption);
+
+            regions.sort((a, b) => a.name.localeCompare(b.name)).forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.innerText = r.name;
+                select.appendChild(opt);
+            });
+
+            select.appendChild(lastOption);
+        }
+
+        async function fetchTotalLogsCount() {
+            try {
+                const logsRef = collection(db, "logs");
+                const snapshot = await getCountFromServer(logsRef);
+                const totalCount = snapshot.data().count;
+
+                console.log("Total logs in database:", totalCount);
+
+                // If you have a UI element for it:
+                document.getElementById('global-log-counter').innerText = totalCount;
+            } catch (e) {
+                console.error("Failed to fetch log count", e);
+            }
         }
 
         window.submitSuggestion = async function () {
             const input = document.getElementById('suggestInput');
+            const newHubInput = document.getElementById('newHubNameInput');
+            const hubSelect = document.getElementById('suggestParentHub');
             const btn = document.getElementById('suggestBtn');
-            const val = input.value.trim();
-            if (!val) return;
-            btn.innerText = "WAIT...";
+
+            const neighborhoodName = input.value.trim();
+            const parentId = hubSelect.value;
+            const newHubName = newHubInput.value.trim();
+
+            // Validation
+            if (!neighborhoodName || !parentId) {
+                alert("Please select a Hub and enter a neighborhood name.");
+                return;
+            }
+            if (parentId === 'NEW_HUB' && !newHubName) {
+                alert("Please enter the name of the new Major Hub.");
+                return;
+            }
+
+            btn.innerText = "WAITING...";
             btn.disabled = true;
+
             try {
-                const match = existingSuggestions.find(s => s.name.toLowerCase() === val.toLowerCase());
-                if (match) {
-                    await updateDoc(doc(db, "suggestions", match.id), { requestCount: increment(1) });
-                } else {
-                    await addDoc(collection(db, "suggestions"), {
-                        name: val, status: "pending", requestCount: 1, createdAt: serverTimestamp(), userId: auth.currentUser.uid
-                    });
+                const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                const payload = {
+                    name: neighborhoodName,
+                    parentId: parentId, // "NEW_HUB" or the existing Hub ID
+                    status: "pending",
+                    requestCount: 1,
+                    createdAt: serverTimestamp(),
+                    userId: auth.currentUser?.uid || "anonymous"
+                };
+
+                // Add the extra field only if it's a new hub request
+                if (parentId === 'NEW_HUB') {
+                    payload.suggestedHubName = newHubName;
                 }
+
+                await addDoc(collection(db, "suggestions"), payload);
+
+                // Reset UI
                 input.value = "";
-                btn.innerText = "SENT!";
-                setTimeout(() => { btn.innerText = "SUGGEST"; btn.disabled = false; }, 3000);
-                loadAutocomplete();
-            } catch (e) { alert("Failed."); btn.innerText = "SUGGEST"; btn.disabled = false; }
+                newHubInput.value = "";
+                hubSelect.selectedIndex = 0;
+                window.toggleNewHubField(); // Hide the field again
+
+                btn.innerText = "THANK YOU!";
+                setTimeout(() => {
+                    btn.innerText = "SUBMIT REQUEST";
+                    btn.disabled = false;
+                }, 3000);
+
+            } catch (e) {
+                console.error(e);
+                alert("Failed to send suggestion.");
+                btn.innerText = "SUBMIT REQUEST";
+                btn.disabled = false;
+            }
         }
+
     </script>
 
     <script>
         function filterRegions() {
             const filter = document.getElementById('searchInput').value.toUpperCase();
             const items = document.getElementsByClassName('region-item');
+
             for (let i = 0; i < items.length; i++) {
-                const txt = items[i].querySelector('.region-name').textContent;
-                items[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+                const hubName = items[i].querySelector('.region-name').textContent.toUpperCase();
+                const subList = items[i].querySelector('.sub-list')?.textContent.toUpperCase() || "";
+
+                // If the search term matches the Hub OR any of its Sub-regions
+                if (hubName.indexOf(filter) > -1 || subList.indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+            const visibleItems = Array.from(items).filter(i => i.style.display !== "none").length;
+            const noResultsEl = document.getElementById('no-results-msg'); // Add this div to your HTML
+
+            if (visibleItems === 0) {
+                noResultsEl.classList.remove('hidden');
+                noResultsEl.innerHTML = `
+                <div class="p-10 text-center neo-border bg-white mt-4">
+                    <p class="font-h3 uppercase mb-2">Neighborhood not found?</p>
+                    <p class="font-data-mono text-sm text-secondary mb-4">We haven't mapped that area yet.</p>
+                    <button onclick="document.getElementById('suggestInput').focus()" class="text-cobalt font-bold underline uppercase text-xs">Suggest adding it</button>
+                </div>
+            `;
+            } else {
+                noResultsEl.classList.add('hidden');
             }
         }
+
+        window.toggleNewHubField = function () {
+            const hubSelect = document.getElementById('suggestParentHub');
+            const newHubContainer = document.getElementById('newHubNameContainer');
+            const subLabel = document.getElementById('subregionLabel');
+            const suggestInput = document.getElementById('suggestInput');
+
+            if (hubSelect.value === 'NEW_HUB') {
+                newHubContainer.classList.remove('hidden');
+                subLabel.classList.remove('hidden');
+                suggestInput.placeholder = "First Neighborhood to add (e.g. Asese)";
+            } else {
+                newHubContainer.classList.add('hidden');
+                subLabel.classList.add('hidden');
+                suggestInput.placeholder = "Neighborhood Name (e.g. Akoka)";
+            }
+        };
+
     </script>
 </body>
 

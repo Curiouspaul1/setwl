@@ -276,9 +276,14 @@
         </section>
 
         <section class="flex flex-col gap-6">
-            <div class="neo-border-b pb-4 flex justify-between items-end">
-                <h3 class="font-h3 text-h3 text-primary uppercase">COMMUNITY LOG</h3>
-                <span class="font-data-mono text-data-mono text-secondary">LATEST REPORTS</span>
+            <div class="neo-border-b pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <h3 class="font-h3 text-h3 text-primary uppercase">COMMUNITY LOG</h3>
+                    <span class="font-data-mono text-data-mono text-secondary">LATEST REPORTS</span>
+                </div>
+                <div id="subregion-filters"
+                    class="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 hide-scrollbar snap-x">
+                </div>
             </div>
             <div id="logs-container" class="flex flex-col gap-6 relative">
             </div>
@@ -307,15 +312,32 @@
                     <p class="font-data-mono text-sm">To unlock all community logs, drop a review for any area you know
                         well.</p>
                 </div>
+
                 <div class="space-y-2">
-                    <label class="font-label-caps uppercase block">Which area are you reviewing?</label>
-                    <select id="reviewAreaSelect"
+                    <label class="font-label-caps uppercase block">1. Select Major Hub</label>
+                    <select id="parentHubSelect" onchange="window.handleHubSelection()"
+                        class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
+                        <option value="" disabled selected>-- Select a Hub --</option>
+                    </select>
+                </div>
+
+                <div id="subregion-container" class="space-y-2 hidden opacity-0 transition-opacity duration-300">
+                    <label class="font-label-caps uppercase block">2. Specific Neighborhood / Estate</label>
+                    <select id="subregionSelect" onchange="window.handleSubregionSelection()"
                         class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
                     </select>
                 </div>
-                <button onclick="goToState('form')"
-                    class="w-full bg-cobalt text-white font-label-caps uppercase tracking-widest py-4 hover:bg-blue-800 transition-colors neo-border">
-                    Continue to Ratings
+
+                <div id="street-tag-container" class="space-y-2 hidden opacity-0 transition-opacity duration-300">
+                    <label class="font-label-caps uppercase block">3. Street or Landmark (Optional)</label>
+                    <input type="text" id="streetTagInput" maxlength="40"
+                        class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt placeholder-gray-400"
+                        placeholder="e.g., Admiralty Way, 1004 Estate...">
+                </div>
+
+                <button id="continueToRatingsBtn" onclick="goToState('form')" disabled
+                    class="w-full bg-surface-container-high text-gray-400 font-label-caps uppercase tracking-widest py-4 transition-colors neo-border">
+                    Select an area to continue
                 </button>
             </div>
 
@@ -526,8 +548,8 @@
         });
 
         function validateFormAndNext() {
-            const selectedAreaId = document.getElementById('reviewAreaSelect').value;
-            const allLogs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+            const selectedAreaId = document.getElementById('subregionSelect').value;
+            const allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
             const currentUser = window.auth ? window.auth.currentUser : null;
 
             if (!currentUser) {
@@ -536,7 +558,7 @@
             }
 
             const alreadyReviewed = allLogs.some(log =>
-                log.areaId === selectedAreaId && log.userId === currentUser.uid
+                log.subregionId === selectedAreaId && log.userId === currentUser.uid
             );
 
             if (alreadyReviewed) {
@@ -560,6 +582,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
         import { getAuth, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -575,12 +598,16 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         window.auth = auth;
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider('6LcNUc0sAAAAAMNGsQfGTZn85dRxMP9ZRIC_Vmz2'),
+            isTokenAutoRefreshEnabled: true // Allows the token to refresh automatically in the background
+        });
 
         const logsContainer = document.getElementById('logs-container');
         const urlParams = new URLSearchParams(window.location.search);
         const currentArea = (urlParams.get('area') || 'lk-01').trim().toLowerCase();
         const currentName = urlParams.get('name') || 'Lekki Phase 1';
-        let hasContributed = localStorage.getItem('setu_verified') === 'true';
+        let hasContributed = localStorage.getItem('setwl_verified') === 'true';
         window.hasContributed = hasContributed;
 
         let confirmationResult = null;
@@ -598,52 +625,133 @@
             }
         }
 
+        // Add this state variable right near where you declare `currentArea`
+        let currentSubregionFilter = 'all';
+
+        // Add the global function to handle pill clicks
+        window.filterLogsBySubregion = function (subId) {
+            currentSubregionFilter = subId;
+            loadFromCache();
+        }
+
+        // --- CASCADING DROPDOWN LOGIC ---
+        window.handleHubSelection = function () {
+            const hubId = document.getElementById('parentHubSelect').value;
+            const allSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
+
+            // Filter subregions that belong to the selected hub
+            const filteredSubregions = allSubregions.filter(sub => sub.regionId === hubId);
+
+            const subSelect = document.getElementById('subregionSelect');
+            const subContainer = document.getElementById('subregion-container');
+            const streetContainer = document.getElementById('street-tag-container');
+            const btn = document.getElementById('continueToRatingsBtn');
+
+            // Reset downstream fields
+            streetContainer.classList.add('hidden', 'opacity-0');
+            document.getElementById('streetTagInput').value = '';
+            btn.disabled = true;
+            btn.className = "w-full bg-surface-container-high text-gray-400 font-label-caps uppercase tracking-widest py-4 transition-colors neo-border";
+
+            if (filteredSubregions.length > 0) {
+                subSelect.innerHTML = '<option value="" disabled selected>-- Select Neighborhood --</option>' +
+                    filteredSubregions.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                subContainer.classList.remove('hidden');
+                // Slight delay for fade-in effect
+                setTimeout(() => subContainer.classList.remove('opacity-0'), 50);
+            } else {
+                // If a hub has no subregions yet, we might need a fallback or prompt them to suggest one.
+                subSelect.innerHTML = '<option value="" disabled>No neighborhoods defined yet</option>';
+                subContainer.classList.remove('hidden');
+                setTimeout(() => subContainer.classList.remove('opacity-0'), 50);
+            }
+        }
+
+        window.handleSubregionSelection = function () {
+            const streetContainer = document.getElementById('street-tag-container');
+            const btn = document.getElementById('continueToRatingsBtn');
+
+            streetContainer.classList.remove('hidden');
+            setTimeout(() => streetContainer.classList.remove('opacity-0'), 50);
+
+            // Enable the continue button
+            btn.disabled = false;
+            btn.className = "w-full bg-cobalt text-white font-label-caps uppercase tracking-widest py-4 hover:bg-blue-800 transition-colors neo-border";
+        }
+
         function loadFromCache() {
-            // 1. Pull data from cache
-            const allLogs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
-            const allRegions = JSON.parse(localStorage.getItem('setu_regions') || "[]");
+            const allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
+            const allRegions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+            const allSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
 
-            const areaLogs = allLogs.filter(log => log.areaId === currentArea);
+            // 1. Identify valid subregions for this Hub
+            const hubSubregions = allSubregions.filter(sub => sub.regionId === currentArea);
+            const hubSubregionIds = hubSubregions.map(sub => sub.id);
 
-            // 2. POPULATE DROPDOWN FIRST (So it works even if there are 0 logs)
-            const selectEl = document.getElementById('reviewAreaSelect');
-            if (selectEl) {
-                selectEl.innerHTML = allRegions.map(r =>
-                    `<option value="${r.id}" ${r.id === currentArea ? 'selected' : ''}>${r.name}</option>`
-                ).join('');
+            // 2. Filter logs for the entire Hub (handles both new logs and migrated old logs)
+            let areaLogs = allLogs.filter(log =>
+                log.regionId === currentArea ||
+                hubSubregionIds.includes(log.subregionId) ||
+                log.areaId === currentArea
+            );
+
+            // 3. Apply specific Neighborhood filter if active
+            if (currentSubregionFilter !== 'all') {
+                areaLogs = areaLogs.filter(log => log.subregionId === currentSubregionFilter);
             }
 
-            // 3. Update Header Info
-            const zoneEl = document.getElementById('zone-id-display');
-            const countEl = document.getElementById('log-count-display');
-            if (zoneEl) zoneEl.innerText = currentArea.toUpperCase();
-            if (countEl) countEl.innerText = areaLogs.length;
+            // --- RENDER MODAL DROPDOWN (If empty) ---
+            const parentSelect = document.getElementById('parentHubSelect');
+            if (parentSelect && parentSelect.options.length <= 1) {
+                parentSelect.innerHTML = '<option value="" disabled selected>-- Select a Hub --</option>' +
+                    allRegions.map(r => `<option value="${r.id}" ${r.id === currentArea ? 'selected' : ''}>${r.name}</option>`).join('');
+                if (currentArea) window.handleHubSelection(); // Auto-populate child dropdown
+            }
 
+            // --- RENDER FILTER PILLS ---
+            const filterContainer = document.getElementById('subregion-filters');
+            if (filterContainer && hubSubregions.length > 0) {
+                let filterHtml = `<button onclick="window.filterLogsBySubregion('all')" class="snap-start px-4 py-2 neo-border text-xs font-bold uppercase whitespace-nowrap transition-colors ${currentSubregionFilter === 'all' ? 'bg-black text-white' : 'bg-white text-black hover:bg-surface-container-high'}">All of ${currentName}</button>`;
+
+                hubSubregions.forEach(sub => {
+                    const isActive = currentSubregionFilter === sub.id;
+                    filterHtml += `<button onclick="window.filterLogsBySubregion('${sub.id}')" class="snap-start px-4 py-2 neo-border text-xs font-bold uppercase whitespace-nowrap transition-colors ${isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-surface-container-high'}">${sub.name}</button>`;
+                });
+                filterContainer.innerHTML = filterHtml;
+            }
+
+            // --- HEADER STATS ---
+            const countEl = document.getElementById('log-count-display');
+            const zoneEl = document.getElementById('zone-id-display');
+            if (countEl) countEl.innerText = areaLogs.length;
+            if (zoneEl) zoneEl.innerText = currentSubregionFilter === 'all' ? currentArea.toUpperCase() : currentSubregionFilter.toUpperCase();
+
+            // --- EMPTY STATE HANDLING ---
             if (areaLogs.length === 0) {
-                document.getElementById('empty-state-overlay').classList.remove('hidden');
-                // Reset metrics display
-                ['power', 'water', 'security', 'drainage', 'serenity'].forEach(m => updateSummaryMetric(m, 0));
-                logsContainer.innerHTML = `<div class="p-6 text-center text-secondary font-data-mono neo-border bg-white italic">Numerical ratings are in, but no one has dropped a gist yet.</div>`;
+                if (currentSubregionFilter !== 'all') {
+                    document.getElementById('empty-state-overlay').classList.add('hidden');
+                    ['power', 'water', 'security', 'drainage', 'serenity'].forEach(m => updateSummaryMetric(m, 0));
+                    logsContainer.innerHTML = `<div class="p-6 text-center text-secondary font-data-mono neo-border bg-white italic">No gists dropped for this specific neighborhood yet.</div>`;
+                } else {
+                    document.getElementById('empty-state-overlay').classList.remove('hidden');
+                    ['power', 'water', 'security', 'drainage', 'serenity'].forEach(m => updateSummaryMetric(m, 0));
+                    logsContainer.innerHTML = `<div class="p-6 text-center text-secondary font-data-mono neo-border bg-white italic">Numerical ratings are in, but no one has dropped a gist yet.</div>`;
+                }
                 return;
             }
+
             document.getElementById('empty-state-overlay').classList.add('hidden');
 
-            // 4. CALCULATE METRICS
+            // --- CALCULATE DYNAMIC METRICS ---
             const metrics = ['power', 'water', 'security', 'drainage', 'serenity'];
             const totals = areaLogs.reduce((acc, log) => {
-                metrics.forEach(m => {
-                    const val = log[m + 'Rating'] || 0;
-                    acc[m] += val;
-                });
+                metrics.forEach(m => acc[m] += (log[m + 'Rating'] || 0));
                 return acc;
             }, { power: 0, water: 0, security: 0, drainage: 0, serenity: 0 });
 
-            const totalCount = areaLogs.length;
-            metrics.forEach(m => {
-                updateSummaryMetric(m, totals[m] / totalCount);
-            });
+            metrics.forEach(m => updateSummaryMetric(m, totals[m] / areaLogs.length));
 
-            // 5. RENDER LOGS (Filtering for comments)
+            // --- RENDER LOGS ---
             const logsWithComments = areaLogs.filter(log => log.comment && log.comment.trim() !== "");
             logsContainer.innerHTML = '';
 
@@ -654,30 +762,44 @@
             logsWithComments.forEach((log, index) => {
                 const dateStr = log.createdAt?.seconds ? new Date(log.createdAt.seconds * 1000).toLocaleDateString('en-GB') : 'Recent';
 
-                // RESTORED LOCK OVERLAY HTML
+                // Smart Tagging: Show the Sub-region name if viewing 'All', otherwise show 'Resident Gist'
+                let locationBadge = 'Resident Gist';
+                if (log.subregionId && currentSubregionFilter === 'all') {
+                    const subName = allSubregions.find(s => s.id === log.subregionId)?.name;
+                    if (subName) locationBadge = subName;
+                }
+
+                const streetBadgeHtml = log.streetTag
+                    ? `<span class="ml-2 font-data-mono text-[10px] uppercase text-cobalt border border-cobalt px-2 py-0.5 rounded-full">📍 ${log.streetTag}</span>`
+                    : '';
+
+                // The Paywall Lock
                 if (index >= 2 && !hasContributed) {
                     if (index === 2) {
                         logsContainer.innerHTML += `
-                        <div class="relative overflow-hidden neo-border p-6 bg-white h-48 mt-2">
-                            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-white via-white/90 to-transparent p-6 text-center">
-                                <span class="material-symbols-outlined text-cobalt text-3xl mb-2">lock</span>
-                                <h4 class="font-h3 text-h3 text-primary uppercase mb-2 text-black">Unlock Feed</h4>
-                                <p class="font-data-mono text-secondary text-xs mb-4">Drop a review to unlock the full community gist.</p>
-                                <button onclick="openModal()" class="bg-cobalt text-white font-label-caps uppercase py-3 px-6 neo-border mt-4 text-xs">Drop a Gist</button>
-                            </div>
-                        </div>`;
+                <div class="relative overflow-hidden neo-border p-6 bg-white h-48 mt-2">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-white via-white/90 to-transparent p-6 text-center">
+                        <span class="material-symbols-outlined text-cobalt text-3xl mb-2">lock</span>
+                        <h4 class="font-h3 text-h3 text-primary uppercase mb-2 text-black">Unlock Feed</h4>
+                        <p class="font-data-mono text-secondary text-xs mb-4">Drop a review to unlock the full community gist.</p>
+                        <button onclick="openModal()" class="bg-cobalt text-white font-label-caps uppercase py-3 px-6 neo-border mt-4 text-xs">Drop a Gist</button>
+                    </div>
+                </div>`;
                     }
                     return;
                 }
 
                 logsContainer.innerHTML += `
-                <div class="neo-border bg-white p-6 text-black">
-                    <div class="flex justify-between items-center mb-4 border-b-2 border-dashed border-outline-variant pb-4">
-                        <span class="font-label-caps text-[10px] uppercase bg-black text-white px-3 py-1">Resident Gist</span>
-                        <span class="font-data-mono text-xs text-secondary">${dateStr}</span>
-                    </div>
-                    <p class="font-body text-primary leading-relaxed">${log.comment}</p>
-                </div>`;
+        <div class="neo-border bg-white p-6 text-black">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 border-b-2 border-dashed border-outline-variant pb-4">
+                <div class="flex items-center flex-wrap gap-2">
+                    <span class="font-label-caps text-[10px] uppercase bg-black text-white px-3 py-1">${locationBadge}</span>
+                    ${streetBadgeHtml}
+                </div>
+                <span class="font-data-mono text-xs text-secondary">${dateStr}</span>
+            </div>
+            <p class="font-body text-primary leading-relaxed">${log.comment}</p>
+        </div>`;
             });
         }
 
@@ -719,10 +841,10 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // If we don't have it in cache, check Firestore
-                if (localStorage.getItem('setu_verified') !== 'true') {
+                if (localStorage.getItem('setwl_verified') !== 'true') {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists() && userDoc.data().hasContributed) {
-                        localStorage.setItem('setu_verified', 'true');
+                        localStorage.setItem('setwl_verified', 'true');
                         window.hasContributed = true;
                         loadFromCache(); // Re-render to unlock logs
                     }
@@ -736,7 +858,7 @@
             const formBtn = document.querySelector('[onclick="validateFormAndNext()"]');
             const user = auth.currentUser;
             const selectedAreaId = document.getElementById('reviewAreaSelect').value;
-            const logs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+            const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
 
             if (logs.some(l => l.areaId === selectedAreaId && l.userId === user.uid)) {
                 alert("System detected an existing log. Duplicate blocked.");
@@ -745,7 +867,9 @@
             }
 
             const newLog = {
-                areaId: selectedAreaId,
+                regionId: document.getElementById('parentHubSelect').value, // Parent
+                subregionId: document.getElementById('subregionSelect').value, // Child
+                streetTag: document.getElementById('streetTagInput').value.trim() || null, // Optional Tag
                 powerRating: safeParse('power-val'),
                 waterRating: safeParse('water-val'),
                 securityRating: safeParse('security-val'),
@@ -786,14 +910,14 @@
                         hasContributed: true,
                         phone: user.phoneNumber || "verified"
                     }, { merge: true });
-                    localStorage.setItem('setu_verified', 'true');
+                    localStorage.setItem('setwl_verified', 'true');
                     window.hasContributed = true;
                 }
 
                 // 3. Update Local Cache
-                const logs = JSON.parse(localStorage.getItem('setu_logs') || "[]");
+                const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
                 logs.unshift(newLog);
-                localStorage.setItem('setu_logs', JSON.stringify(logs));
+                localStorage.setItem('setwl_logs', JSON.stringify(logs));
 
                 closeModal();
                 loadFromCache();
@@ -822,6 +946,7 @@
                 alert("Invalid code.");
             }
         };
+
     </script>
 </body>
 
