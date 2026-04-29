@@ -783,7 +783,7 @@
                     : '';
 
                 // The Paywall Lock
-                if (index >= 2 && !hasContributed) {
+                if (index >= 2 && !window.hasContributed) {
                     if (index === 2) {
                         logsContainer.innerHTML += `
                 <div class="relative overflow-hidden neo-border p-6 bg-white h-48 mt-2">
@@ -820,6 +820,11 @@
             if (!phone) return alert("Enter number");
 
             const fullNum = `+234${phone.replace(/^0+/, '')}`;
+            const btn = document.getElementById('sendCodeBtn');
+
+            // 1. Instantly disable to prevent DUPE from double-clicks
+            btn.disabled = true;
+            btn.innerText = "SENDING...";
 
             if (!window.recaptchaVerifier) {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
@@ -832,18 +837,24 @@
                     confirmationResult = r;
                     document.getElementById('phone-input-section').classList.add('hidden');
                     document.getElementById('code-input-section').classList.remove('hidden');
+
+                    // Reset button state silently in the background
+                    btn.disabled = false;
+                    btn.innerText = "SEND CODE";
                 })
                 .catch(e => {
                     console.error("SMS Error:", e);
-                    // This will show the real error (e.g., auth/unauthorized-domain)
                     alert(`Error: ${e.code || e.message}`);
 
-                    // Critical: Reset reCAPTCHA if it fails so they can try again
+                    // 3. THE FIX: Nuke the verifier cleanly
                     if (window.recaptchaVerifier) {
-                        window.recaptchaVerifier.render().then(widgetId => {
-                            grecaptcha.reset(widgetId);
-                        });
+                        window.recaptchaVerifier.clear(); // Safely unmounts the DOM widget
+                        window.recaptchaVerifier = null;  // Forces a fresh token next try
                     }
+
+                    // Re-enable the button so they can try again
+                    btn.disabled = false;
+                    btn.innerText = "SEND CODE";
                 });
         }
 
@@ -866,10 +877,13 @@
             const btn = document.getElementById('verifyBtn');
             const formBtn = document.querySelector('[onclick="validateFormAndNext()"]');
             const user = auth.currentUser;
-            const selectedAreaId = document.getElementById('reviewAreaSelect').value;
+
+            // THE FIX: Read from the new subregion dropdown, not the old reviewAreaSelect
+            const selectedSubregionId = document.getElementById('subregionSelect').value;
             const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
 
-            if (logs.some(l => l.areaId === selectedAreaId && l.userId === user.uid)) {
+            // THE FIX: Check for duplicates using the new subregionId field
+            if (logs.some(l => l.subregionId === selectedSubregionId && l.userId === user?.uid)) {
                 alert("System detected an existing log. Duplicate blocked.");
                 closeModal();
                 return;
@@ -877,7 +891,7 @@
 
             const newLog = {
                 regionId: document.getElementById('parentHubSelect').value, // Parent
-                subregionId: document.getElementById('subregionSelect').value, // Child
+                subregionId: selectedSubregionId, // Child
                 streetTag: document.getElementById('streetTagInput').value.trim() || null, // Optional Tag
                 powerRating: safeParse('power-val'),
                 waterRating: safeParse('water-val'),
@@ -889,14 +903,6 @@
                 createdAt: { seconds: Math.floor(Date.now() / 1000) }
             };
 
-            const alreadyReviewed = logs.some(l => l.areaId === selectedAreaId && l.userId === user.uid);
-
-            if (alreadyReviewed) {
-                alert("System detected an existing log for this area. Duplicate entry blocked.");
-                closeModal();
-                return;
-            }
-
             // UI Feedback
             const activeBtn = document.getElementById('state-otp').classList.contains('hidden') ? formBtn : btn;
             const originalText = activeBtn.innerText;
@@ -904,11 +910,7 @@
             activeBtn.disabled = true;
 
             try {
-                const user = auth.currentUser;
                 if (!user) throw new Error("No user session");
-
-                const safeParse = (id) => parseInt(document.getElementById(id).innerText.charAt(0));
-                const selectedAreaId = document.getElementById('reviewAreaSelect').value;
 
                 // 1. Write to Firestore
                 await addDoc(collection(db, "logs"), { ...newLog, createdAt: serverTimestamp() });
@@ -924,9 +926,9 @@
                 }
 
                 // 3. Update Local Cache
-                const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
-                logs.unshift(newLog);
-                localStorage.setItem('setwl_logs', JSON.stringify(logs));
+                const currentLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
+                currentLogs.unshift(newLog);
+                localStorage.setItem('setwl_logs', JSON.stringify(currentLogs));
 
                 closeModal();
                 loadFromCache();
