@@ -91,14 +91,33 @@
 
     <header
         class="bg-white font-['Space_Grotesk'] uppercase tracking-widest font-bold top-0 border-b-2 border-black flex justify-between items-center w-full px-6 h-16 sticky z-50">
+
         <div class="flex items-center gap-4 p-2 opacity-0 pointer-events-none">
             <span class="material-symbols-outlined">menu</span>
         </div>
+
         <div class="text-2xl font-black tracking-tighter text-black">SETWL</div>
-        <div class="inline-flex items-center gap-3 neo-border bg-white px-4 py-2">
-            <span class="material-symbols-outlined text-cobalt text-lg">forum</span>
-            <span class="font-h3 text-xs uppercase text-primary">Total Gists:</span>
-            <span id="global-log-counter" class="font-data-mono text-lg font-bold text-black">--</span>
+
+        <div class="flex items-center gap-4">
+
+            <div class="group relative cursor-pointer flex items-center gap-1 hover:bg-zinc-100 transition-colors p-2">
+                <span class="text-sm">🇳🇬</span>
+                <span class="font-data-mono text-[10px] font-bold">NG</span>
+                <span class="material-symbols-outlined text-[14px]">expand_more</span>
+
+                <div
+                    class="absolute right-0 top-[100%] mt-2 w-48 bg-white neo-border p-4 hidden group-hover:block z-[60] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="font-data-mono text-[10px] text-gray-500 leading-tight uppercase">More countries coming
+                        soon.</p>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-2">
+                <span class="material-symbols-outlined text-cobalt text-[18px]">forum</span>
+                <span class="font-h3 text-[10px] uppercase text-primary">Total Gists:</span>
+                <span id="global-log-counter" class="font-data-mono text-sm font-bold text-black">--</span>
+            </div>
+
         </div>
     </header>
 
@@ -130,6 +149,26 @@
 
         <div class="w-full flex flex-col gap-4">
             <h3 class="font-h3 text-lg font-bold uppercase border-b-2 border-black pb-2 text-black">Available Hubs</h3>
+            <div class="mb-8 p-6 neo-border bg-white flex flex-col md:flex-row gap-4 items-end">
+                <div class="w-full md:w-1/3">
+                    <label class="font-label-caps text-[10px] uppercase block mb-2">Filter by State</label>
+                    <select id="stateFilter" onchange="window.handleStateFilter()"
+                        class="w-full neo-border p-3 bg-transparent font-data-mono text-xs focus:outline-none focus:border-cobalt appearance-none cursor-pointer">
+                        <option value="ALL">All States (Trending)</option>
+                    </select>
+                </div>
+
+                <div class="w-full md:w-1/3">
+                    <label class="font-label-caps text-[10px] uppercase block mb-2">Filter by LGA</label>
+                    <select id="lgaFilter" onchange="window.handleLGAFilter()" disabled
+                        class="w-full neo-border p-3 bg-surface-container-high text-gray-500 font-data-mono text-xs focus:outline-none focus:border-cobalt appearance-none cursor-pointer">
+                        <option value="ALL">All LGAs</option>
+                    </select>
+                </div>
+
+                <div class="w-full md:w-1/3 hidden md:block">
+                </div>
+            </div>
             <div id="regions-container" class="flex flex-col gap-3">
             </div>
 
@@ -139,27 +178,25 @@
                     major hub.</p>
 
                 <div class="flex flex-col gap-3">
-                    <div class="flex flex-col gap-2">
-                        <select id="suggestParentHub" onchange="window.toggleNewHubField()"
-                            class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none focus:border-cobalt appearance-none cursor-pointer">
-                            <option value="" disabled selected>-- Select Major Hub --</option>
-                            <option value="NEW_HUB" class="font-bold text-cobalt">+ Suggest a totally new Hub</option>
+                    <div class="flex flex-col gap-3">
+                        <select id="suggestState" onchange="window.handleSuggestStateChange()"
+                            class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none cursor-pointer">
+                            <option value="" disabled selected>-- Select State --</option>
                         </select>
 
-                        <div id="newHubNameContainer" class="hidden flex flex-col gap-1 transition-all">
-                            <label class="font-label-caps text-[10px] uppercase text-cobalt">New Major Hub Name</label>
-                            <input type="text" id="newHubNameInput"
-                                class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none border-cobalt shadow-[2px_2px_0px_0px_rgba(0,53,190,1)]"
-                                placeholder="e.g. Mowe / Ibafo">
-                        </div>
-
-                        <div class="flex flex-col gap-1">
-                            <label id="subregionLabel" class="font-label-caps text-[10px] uppercase hidden">Neighborhood
-                                Name</label>
-                            <input type="text" id="suggestInput"
-                                class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none focus:border-cobalt"
-                                placeholder="Neighborhood Name (e.g. Akoka)">
-                        </div>
+                        <select id="suggestLGA" disabled
+                            class="w-full neo-border bg-surface-container-high text-gray-500 p-3 font-data-mono text-xs focus:outline-none cursor-pointer disabled:opacity-50 transition-colors">
+                            <option value="">-- Select LGA (Optional) --</option>
+                        </select>
+                        <input type="text" id="suggestHub"
+                            class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none"
+                            placeholder="Major Hub / Area (e.g., Yaba, Gbagada)">
+                        <input type="text" id="suggestNeighborhood"
+                            class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none"
+                            placeholder="Specific Neighborhood/Estate (e.g., Akoka)">
+                        <input type="email" id="suggestEmail"
+                            class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none shadow-[2px_2px_0px_0px_rgba(0,53,190,1)] border-cobalt mt-2"
+                            placeholder="Your Email (to notify you when it's live)">
                     </div>
 
                     <button onclick="window.submitSuggestion()" id="suggestBtn"
@@ -223,104 +260,208 @@
             fetchTotalLogsCount();
         });
 
-        async function syncAppData() {
-            const loader = document.getElementById('loader-bar');
-            const splash = document.getElementById('splash-screen');
+        // Add these to your global scope
+        let allStates = [];
+        let allLGAs = [];
+        let allRegions = [];
+        let allLogs = [];
 
-            // 1. INSTANT HYDRATION: Draw from cache immediately so the screen isn't empty
-            const cachedRegions = JSON.parse(localStorage.getItem('setwl_regions'));
-            const cachedLogs = JSON.parse(localStorage.getItem('setwl_logs'));
-            if (cachedRegions) {
-                renderRegions(cachedRegions);
-                loadAutocomplete();
-                if (cachedLogs) renderLeaderboard();
-                // If we've already seen the splash this session, kill it immediately
-                if (sessionStorage.getItem('setwl_session_active')) {
-                    splash.style.display = 'none';
-                }
+        window.syncAppData = async function () {
+            // 1. LOAD FROM CACHE FIRST (Instant UI)
+            allRegions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+            allStates = JSON.parse(localStorage.getItem('setwl_states') || "[]");
+            allLGAs = JSON.parse(localStorage.getItem('setwl_lgas') || "[]");
+            allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
+
+            // If we have cached data, render it immediately
+            if (allRegions.length > 0) {
+                renderInitialUI();
             }
 
-            // 2. BACKGROUND SYNC: Always check for new regions/logs
             try {
-                // If it's a cold start (no session), show progress on the loader
-                if (!sessionStorage.getItem('setwl_session_active')) {
-                    loader.style.width = "20%";
-                }
+                // 2. FETCH FRESH DATA FROM FIRESTORE
+                const [regSnap, stateSnap, lgaSnap, logSnap] = await Promise.all([
+                    getDocs(collection(db, "regions")),
+                    getDocs(collection(db, "states")),
+                    getDocs(collection(db, "lgas")),
+                    getDocs(collection(db, "logs"))
+                ]);
 
-                // Fetch Regions
-                const regionsSnap = await getDocs(collection(db, "regions"));
-                const subregionsSnap = await getDocs(collection(db, "subregions"));
-                const regions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allRegions = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                allStates = stateSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                allLGAs = lgaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                allLogs = logSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                // Fetch All Logs
-                const logsSnap = await getDocs(collection(db, "logs"));
-                const logs = logsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const subregions = subregionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // 3. STORE IN LOCALSTORAGE FOR NEXT VISIT
+                localStorage.setItem('setwl_regions', JSON.stringify(allRegions));
+                localStorage.setItem('setwl_states', JSON.stringify(allStates));
+                localStorage.setItem('setwl_lgas', JSON.stringify(allLGAs));
+                localStorage.setItem('setwl_logs', JSON.stringify(allLogs));
 
-                // Update Local Storage
-                localStorage.setItem('setwl_regions', JSON.stringify(regions));
-                localStorage.setItem('setwl_logs', JSON.stringify(logs));
-                localStorage.setItem('setwl_subregions', JSON.stringify(subregions))
-
-                // Re-render UI with the fresh data (catches new regions)
-                renderRegions(regions);
-                renderLeaderboard();
-
-                // Handle Splash Screen exit
-                if (!sessionStorage.getItem('setwl_session_active')) {
-                    loader.style.width = "100%";
-                    sessionStorage.setItem('setwl_session_active', 'true');
-                    setTimeout(() => {
-                        splash.classList.add('opacity-0', 'pointer-events-none');
-                    }, 600);
-                }
+                // 4. UPDATE UI WITH FRESH DATA
+                renderInitialUI();
+                loadAutocomplete(); // Refresh search suggestions
 
             } catch (e) {
-                console.error("Background sync failed:", e);
-                // Fail silently since we already rendered the cache
-                splash.style.display = 'none';
+                console.error("Sync Error:", e);
             }
         }
 
-        // function renderRegions(regions) {
-        //     const container = document.getElementById('regions-container');
-        //     container.innerHTML = regions.map(data => `
-        //         <a href="summary.html?area=${data.id}&name=${encodeURIComponent(data.name)}" 
-        //         class="region-item group flex items-center justify-between w-full neo-border p-4 bg-white hover:bg-black hover:text-white transition-colors text-black">
-        //             <div>
-        //                 <span class="font-body font-bold block region-name uppercase">${data.name}</span>
-        //                 <span class="font-data-mono text-xs text-secondary group-hover:text-zinc-400 block mt-1">Lagos</span>
-        //             </div>
-        //             <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-        //         </a>
-        //     `).join('');
-        // }
+        // Helper to trigger all rendering in one go
+        function renderInitialUI() {
+            const stateSelect = document.getElementById('stateFilter');
+            const suggestStateSelect = document.getElementById('suggestState');
 
-        function renderRegions(regions) {
+            // Populate State Dropdowns (Clear first to avoid duplicates on re-render)
+            stateSelect.innerHTML = '<option value="ALL">All States (Trending)</option>';
+            suggestStateSelect.innerHTML = '<option value="" disabled selected>-- Select State --</option>';
+
+            allStates.sort((a, b) => a.name.localeCompare(b.name)).forEach(s => {
+                stateSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                suggestStateSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+            });
+
+            window.renderTrendingLocations();
+            window.renderLeaderboard();
+        }
+
+        window.renderTrendingLocations = function () {
+            // Count logs per region
+            const counts = {};
+            allLogs.forEach(log => {
+                counts[log.regionId] = (counts[log.regionId] || 0) + 1;
+            });
+
+            // Sort regions by log count descending
+            let trendingRegions = [...allRegions].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+
+            // Show top 12 by default
+            renderRegions(trendingRegions.slice(0, 12));
+        }
+
+        window.handleSuggestStateChange = function () {
+            const stateId = document.getElementById('suggestState').value;
+            const lgaSelect = document.getElementById('suggestLGA');
+
+            // If no state is selected, lock the LGA dropdown
+            if (!stateId) {
+                lgaSelect.disabled = true;
+                lgaSelect.classList.add('bg-surface-container-high', 'text-gray-500');
+                lgaSelect.classList.remove('bg-white', 'text-black');
+                lgaSelect.innerHTML = '<option value="">-- Select LGA (Optional) --</option>';
+                return;
+            }
+
+            // State is selected! Unlock and populate LGAs
+            lgaSelect.disabled = false;
+            lgaSelect.classList.remove('bg-surface-container-high', 'text-gray-500');
+            lgaSelect.classList.add('bg-white', 'text-black');
+
+            const stateLGAs = allLGAs.filter(l => l.stateId === stateId);
+
+            lgaSelect.innerHTML = '<option value="">-- Select LGA (Optional) --</option>' +
+                stateLGAs.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+            // Note: We use l.name as the value so the text string is sent to your admin panel perfectly formatted
+        }
+
+        window.handleStateFilter = function () {
+            const stateId = document.getElementById('stateFilter').value;
+            const lgaSelect = document.getElementById('lgaFilter');
+
+            if (stateId === "ALL") {
+                lgaSelect.disabled = true;
+                lgaSelect.innerHTML = '<option value="ALL">All LGAs</option>';
+                lgaSelect.classList.add('bg-surface-container-high', 'text-gray-500');
+                window.renderTrendingLocations();
+                return;
+            }
+
+            // Enable and populate LGA dropdown
+            lgaSelect.disabled = false;
+            lgaSelect.classList.remove('bg-surface-container-high', 'text-gray-500');
+            lgaSelect.classList.add('bg-white', 'text-black');
+
+            const stateLGAs = allLGAs.filter(l => l.stateId === stateId);
+            lgaSelect.innerHTML = '<option value="ALL">All LGAs in State</option>' +
+                stateLGAs.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+
+            // Render regions belonging to this state
+            const stateRegions = allRegions.filter(r => r.stateId === stateId);
+            renderRegions(stateRegions);
+        }
+
+        window.handleLGAFilter = function () {
+            const stateId = document.getElementById('stateFilter').value;
+            const lgaId = document.getElementById('lgaFilter').value;
+
+            let filteredRegions = allRegions.filter(r => r.stateId === stateId);
+
+            if (lgaId !== "ALL") {
+                filteredRegions = filteredRegions.filter(r => r.lgaId === lgaId);
+            }
+
+            renderRegions(filteredRegions);
+        }
+
+        // Updated Render Function to show Review Counts
+        function renderRegions(regionsToRender) {
             const container = document.getElementById('regions-container');
-            const allSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
 
-            container.innerHTML = regions.map(region => {
-                // Find neighborhoods belonging to this hub
-                const subs = allSubregions.filter(s => s.regionId === region.id);
-                const subsList = subs.map(s => s.name).join(', ');
-                const subsPreview = subs.length > 0
-                    ? `<p class="text-[10px] text-secondary uppercase mt-2 font-data-mono truncate sub-list">Includes: ${subsList}</p>`
-                    : '';
+            if (regionsToRender.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-10 text-center neo-border bg-white italic font-data-mono">No regions mapped here yet.</div>`;
+                return;
+            }
+
+            // Calculate counts and average scores
+            const stats = {};
+            allLogs.forEach(log => {
+                if (!stats[log.regionId]) stats[log.regionId] = { count: 0, totalScore: 0 };
+
+                const avg = ((log.powerRating || 0) + (log.waterRating || 0) + (log.securityRating || 0) + (log.drainageRating || 0) + (log.serenityRating || 0)) / 5;
+
+                stats[log.regionId].count += 1;
+                stats[log.regionId].totalScore += avg;
+            });
+
+            container.innerHTML = regionsToRender.map(region => {
+                const regionStats = stats[region.id] || { count: 0, totalScore: 0 };
+                const reviewCount = regionStats.count;
+                const avgScore = reviewCount > 0 ? (regionStats.totalScore / reviewCount).toFixed(1) : "0.0";
+
+                // Determine bar color based on score
+                let barColor = "bg-gray-200";
+                if (avgScore >= 4.0) barColor = "bg-green-500";
+                else if (avgScore >= 2.5) barColor = "bg-yellow-500";
+                else if (avgScore > 0) barColor = "bg-red-500";
+
                 return `
-                <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
-                    class="region-item bg-white neo-border p-6 cursor-pointer hover:bg-black hover:text-white transition-all group hover:bg-black hover:text-white transition-colors text-black w-full">
-                    <div class="flex justify-between items-start">
-                        <h3 class="region-name font-body font-bold block region-name uppercase">${region.name}</h3>
-                        <span class="material-symbols-outlined text-cobalt group-hover:text-white">arrow_forward</span>
-                    </div>
-                    ${subsPreview}
+            <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
+                 class="region-item bg-white neo-border p-6 cursor-pointer hover:bg-black hover:text-white transition-all group flex flex-col justify-between h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="region-name font-h3 uppercase text-lg">${region.name}</h3>
+                    <span class="material-symbols-outlined text-cobalt group-hover:text-white transition-colors">arrow_forward</span>
                 </div>
-            `;
+                <div class="mt-auto flex justify-between items-end">
+                    <span class="inline-block bg-surface-container-low group-hover:bg-zinc-800 text-black group-hover:text-white px-2 py-1 text-[10px] font-bold font-data-mono border border-black group-hover:border-white transition-colors">
+                        ${reviewCount} GIST${reviewCount !== 1 ? 'S' : ''}
+                    </span>
+                    
+                    ${reviewCount > 0 ? `
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="font-data-mono text-[10px] font-bold">⭐ ${avgScore}/5.0</span>
+                        <div class="w-16 h-1.5 bg-gray-200 border border-black group-hover:border-white">
+                            <div class="h-full ${barColor}" style="width: ${(avgScore / 5) * 100}%"></div>
+                        </div>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
             }).join('');
         }
 
-        function renderLeaderboard() {
+        window.renderLeaderboard = () => {
             const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
             const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
 
@@ -392,23 +533,18 @@
 
         function loadAutocomplete() {
             const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
-            const select = document.getElementById('suggestParentHub');
+            const dataList = document.getElementById('regionsList');
 
-            // Keep the first "Select" and last "New Hub" options, only refresh the middle
-            const firstOption = select.options[0];
-            const lastOption = select.options[select.options.length - 1];
-
-            select.innerHTML = '';
-            select.appendChild(firstOption);
-
-            regions.sort((a, b) => a.name.localeCompare(b.name)).forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r.id;
-                opt.innerText = r.name;
-                select.appendChild(opt);
-            });
-
-            select.appendChild(lastOption);
+            // Only run if the search bar datalist exists on the page
+            if (dataList) {
+                dataList.innerHTML = '';
+                regions.sort((a, b) => a.name.localeCompare(b.name)).forEach(r => {
+                    const opt = document.createElement('option');
+                    // We set the value to the name so it shows nicely in the search bar
+                    opt.value = r.name;
+                    dataList.appendChild(opt);
+                });
+            }
         }
 
         async function fetchTotalLogsCount() {
@@ -427,24 +563,38 @@
         }
 
         window.submitSuggestion = async function () {
-            const input = document.getElementById('suggestInput');
-            const newHubInput = document.getElementById('newHubNameInput');
-            const hubSelect = document.getElementById('suggestParentHub');
+            const state = document.getElementById('suggestState').value;
+            const lga = document.getElementById('suggestLGA').value.trim();
+            const hub = document.getElementById('suggestHub').value.trim();
+            const neighborhood = document.getElementById('suggestNeighborhood').value.trim();
+            const email = document.getElementById('suggestEmail').value.trim();
             const btn = document.getElementById('suggestBtn');
 
-            const neighborhoodName = input.value.trim();
-            const parentId = hubSelect.value;
-            const newHubName = newHubInput.value.trim();
+            if (!state || !hub || !neighborhood) {
+                alert("State, Major Hub, and Neighborhood are required.");
+                return;
+            }
 
-            // Validation
-            if (!neighborhoodName || !parentId) {
-                alert("Please select a Hub and enter a neighborhood name.");
-                return;
+            // --- SMART DEDUPLICATION ---
+            const cachedRegions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+            const cachedSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
+
+            // Does the Hub already exist?
+            const existingHub = cachedRegions.find(r => r.name.toLowerCase() === hub.toLowerCase());
+
+            if (existingHub) {
+                // If Hub exists, does the Neighborhood already exist inside it?
+                const subExists = cachedSubregions.some(s =>
+                    s.regionId === existingHub.id &&
+                    s.name.toLowerCase() === neighborhood.toLowerCase()
+                );
+
+                if (subExists) {
+                    alert(`"${neighborhood}" is already mapped under "${existingHub.name}". You can search for it directly!`);
+                    return;
+                }
             }
-            if (parentId === 'NEW_HUB' && !newHubName) {
-                alert("Please enter the name of the new Major Hub.");
-                return;
-            }
+            // ---------------------------
 
             btn.innerText = "WAITING...";
             btn.disabled = true;
@@ -452,27 +602,23 @@
             try {
                 const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
 
-                const payload = {
-                    name: neighborhoodName,
-                    parentId: parentId, // "NEW_HUB" or the existing Hub ID
+                await addDoc(collection(db, "suggestions"), {
+                    stateId: state,
+                    suggestedLGA: lga || "Unknown",
+                    suggestedHubName: hub,
+                    name: neighborhood,
+                    email: email || null,
                     status: "pending",
-                    requestCount: 1,
+                    requestCount: 1, // Added request count back for sorting
                     createdAt: serverTimestamp(),
                     userId: auth.currentUser?.uid || "anonymous"
-                };
-
-                // Add the extra field only if it's a new hub request
-                if (parentId === 'NEW_HUB') {
-                    payload.suggestedHubName = newHubName;
-                }
-
-                await addDoc(collection(db, "suggestions"), payload);
+                });
 
                 // Reset UI
-                input.value = "";
-                newHubInput.value = "";
-                hubSelect.selectedIndex = 0;
-                window.toggleNewHubField(); // Hide the field again
+                document.getElementById('suggestLGA').value = "";
+                document.getElementById('suggestHub').value = "";
+                document.getElementById('suggestNeighborhood').value = "";
+                document.getElementById('suggestEmail').value = "";
 
                 btn.innerText = "THANK YOU!";
                 setTimeout(() => {
@@ -497,27 +643,26 @@
 
             for (let i = 0; i < items.length; i++) {
                 const hubName = items[i].querySelector('.region-name').textContent.toUpperCase();
-                const subList = items[i].querySelector('.sub-list')?.textContent.toUpperCase() || "";
-
-                // If the search term matches the Hub OR any of its Sub-regions
-                if (hubName.indexOf(filter) > -1 || subList.indexOf(filter) > -1) {
+                // Since we don't render sub-lists on the cards anymore, we just search hub names
+                if (hubName.indexOf(filter) > -1) {
                     items[i].style.display = "";
                 } else {
                     items[i].style.display = "none";
                 }
             }
+
             const visibleItems = Array.from(items).filter(i => i.style.display !== "none").length;
-            const noResultsEl = document.getElementById('no-results-msg'); // Add this div to your HTML
+            const noResultsEl = document.getElementById('no-results-msg');
 
             if (visibleItems === 0) {
                 noResultsEl.classList.remove('hidden');
                 noResultsEl.innerHTML = `
-                <div class="p-10 text-center neo-border bg-white mt-4">
-                    <p class="font-h3 uppercase mb-2">Neighborhood not found?</p>
-                    <p class="font-data-mono text-sm text-secondary mb-4">We haven't mapped that area yet.</p>
-                    <button onclick="document.getElementById('suggestInput').focus()" class="text-cobalt font-bold underline uppercase text-xs">Suggest adding it</button>
-                </div>
-            `;
+            <div class="p-10 text-center neo-border bg-white mt-4">
+                <p class="font-h3 uppercase mb-2">Neighborhood not found?</p>
+                <p class="font-data-mono text-sm text-secondary mb-4">We haven't mapped that area yet.</p>
+                <button onclick="document.getElementById('suggestState').focus()" class="text-cobalt font-bold underline uppercase text-xs">Suggest adding it</button>
+            </div>
+        `;
             } else {
                 noResultsEl.classList.add('hidden');
             }

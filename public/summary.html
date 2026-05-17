@@ -323,15 +323,29 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="font-label-caps uppercase block">1. Select Major Hub</label>
+                    <label class="font-label-caps uppercase block text-[10px]">1. State</label>
+                    <select id="modalStateSelect" onchange="window.handleModalStateSelection()"
+                        class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
+                        <option value="" disabled selected>-- Select State --</option>
+                    </select>
+                </div>
+
+                <div id="modal-lga-container" class="space-y-2 hidden opacity-0 transition-opacity duration-300">
+                    <label class="font-label-caps uppercase block text-[10px]">2. Local Government Area</label>
+                    <select id="modalLGASelect" onchange="window.handleModalLGASelection()"
+                        class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
+                    </select>
+                </div>
+
+                <div id="modal-hub-container" class="space-y-2 hidden opacity-0 transition-opacity duration-300">
+                    <label class="font-label-caps uppercase block text-[10px]">3. Major Hub</label>
                     <select id="parentHubSelect" onchange="window.handleHubSelection()"
                         class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
-                        <option value="" disabled selected>-- Select a Hub --</option>
                     </select>
                 </div>
 
                 <div id="subregion-container" class="space-y-2 hidden opacity-0 transition-opacity duration-300">
-                    <label class="font-label-caps uppercase block">2. Specific Neighborhood / Estate</label>
+                    <label class="font-label-caps uppercase block text-[10px]">4. Specific Neighborhood / Estate</label>
                     <select id="subregionSelect" onchange="window.handleSubregionSelection()"
                         class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt cursor-pointer appearance-none">
                     </select>
@@ -474,33 +488,26 @@
             </div>
 
             <div id="state-otp" class="hidden p-6 space-y-6 flex-shrink-0">
-                <div class="bg-yellow-100 border-2 border-black p-4">
-                    <p class="font-data-mono"><strong>Final Step:</strong> Verify your number to permanently unlock all
-                        logs.</p>
+                <div class="bg-surface-container-low border-2 border-black p-4">
+                    <p class="font-data-mono"><strong>Final Step:</strong> Verify your email to permanently unlock all
+                        community logs and get updates.</p>
                 </div>
-                <div id="phone-input-section" class="space-y-4">
-                    <div class="flex neo-border">
-                        <span class="p-4 bg-surface-container-high border-r-2 border-black font-data-mono">+234</span>
-                        <input type="tel" id="phoneNumber"
-                            class="w-full bg-transparent p-4 font-data-mono focus:outline-none"
-                            placeholder="801 234 5678">
-                    </div>
-                    <div id="recaptcha-container"></div>
-                    <button id="sendCodeBtn" onclick="window.sendOTP()"
-                        class="w-full bg-black text-white py-3 neo-border font-bold uppercase">Send Code</button>
-                </div>
-                <div id="code-input-section" class="space-y-4 hidden pt-4 border-t-2 border-black border-dashed">
-                    <input type="text" id="verificationCode"
-                        class="w-full neo-border p-4 font-data-mono text-center text-xl tracking-widest"
-                        placeholder="------">
-                    <div class="flex gap-4">
-                        <button onclick="goToState('form')"
-                            class="w-1/3 bg-surface-container-high py-4 neo-border font-bold uppercase text-xs">Back</button>
-                        <button id="verifyBtn" onclick="window.verifyOTPAndSubmit()"
-                            class="w-2/3 bg-cobalt text-white py-4 neo-border font-bold uppercase text-xs">Verify &
-                            Publish</button>
+
+                <div class="space-y-4">
+                    <button onclick="window.verifyWithGoogle(this)"
+                        class="w-full bg-white text-black py-4 neo-border font-bold uppercase flex items-center justify-center gap-3 hover:bg-zinc-100 transition-colors">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"
+                            alt="Google">
+                        <span id="googleBtnText">Verify with Google</span>
+                    </button>
+
+                    <div class="text-center font-data-mono text-[10px] text-gray-500 uppercase">
+                        We use this to prevent spam and send you area updates.
                     </div>
                 </div>
+
+                <button onclick="goToState('form')"
+                    class="w-full bg-surface-container-high py-4 neo-border font-bold uppercase text-xs mt-4">Back</button>
             </div>
         </div>
     </div>
@@ -561,26 +568,28 @@
             const allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
             const currentUser = window.auth ? window.auth.currentUser : null;
 
-            if (!currentUser) {
-                alert("Session error. Please refresh and try again.");
-                return;
+            // 1. Only check for duplicates IF the user is already logged in
+            if (currentUser) {
+                const alreadyReviewed = allLogs.some(log =>
+                    log.subregionId === selectedAreaId && log.userId === currentUser.uid
+                );
+
+                if (alreadyReviewed) {
+                    alert("You've already dropped a gist for this area!");
+                    return;
+                }
             }
 
-            const alreadyReviewed = allLogs.some(log =>
-                log.subregionId === selectedAreaId && log.userId === currentUser.uid
-            );
-
-            if (alreadyReviewed) {
-                alert("You've already dropped a gist for this area!");
-                return;
-            }
-
+            // 2. Verify all sliders are filled
             if (!safeParse('power-val') || !safeParse('water-val') || !safeParse('security-val') || !safeParse('drainage-val') || !safeParse('serenity-val')) {
                 alert("Please rate all categories.");
                 return;
             }
 
-            if (window.hasContributed) {
+            // 3. Route them correctly
+            // If they are logged in and verified, publish immediately. 
+            // Otherwise, send them to the Google Verify screen.
+            if (window.hasContributed && currentUser) {
                 window.publishReview();
             } else {
                 goToState('otp');
@@ -592,7 +601,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
-        import { getAuth, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, RecaptchaVerifier, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB6Qke--ciCPKdzDrh4kuYf0Dl6wq635Nw",
@@ -622,6 +631,49 @@
         let confirmationResult = null;
 
         document.getElementById('region-title').innerText = currentName;
+        const googleProvider = new GoogleAuthProvider();
+
+        window.verifyWithGoogle = async function (btnElement) {
+            const textSpan = btnElement.querySelector('#googleBtnText');
+            const originalText = textSpan.innerText;
+
+            // 1. Set Loading State
+            textSpan.innerText = "VERIFYING...";
+            btnElement.disabled = true;
+            btnElement.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                // 2. Trigger Google Auth Popup
+                await signInWithPopup(auth, googleProvider);
+
+                // 3. Switch to Publishing State
+                textSpan.innerText = "PUBLISHING...";
+
+                // 4. Await the publish function so we don't close prematurely
+                await window.publishReview();
+
+                // 5. Force Close & Reset Modal completely
+                const modal = document.getElementById('contribute-modal');
+                if (modal) modal.classList.add('hidden');
+
+                // Reset the modal view back to the form for the next time they open it
+                if (typeof window.goToState === 'function') {
+                    window.goToState('form');
+                }
+
+            } catch (error) {
+                console.error("Auth/Publish Error:", error);
+                // Don't spam the user with an alert if they simply closed the Google popup manually
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    alert("Something went wrong. Please check your connection and try again.");
+                }
+            } finally {
+                // 6. Restore Button State
+                textSpan.innerText = originalText;
+                btnElement.disabled = false;
+                btnElement.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        };
 
         function updateSummaryMetric(metric, avgValue) {
             const rounded = Math.round(avgValue);
@@ -644,46 +696,186 @@
         }
 
         // --- CASCADING DROPDOWN LOGIC ---
-        window.handleHubSelection = function () {
-            const hubId = document.getElementById('parentHubSelect').value;
-            const allSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
+        // --- DATA CACHE FOR MODAL ---
+        let modalStates = [];
+        let modalLGAs = [];
+        let modalRegions = [];
+        let modalSubregions = [];
 
-            // Filter subregions that belong to the selected hub
-            const filteredSubregions = allSubregions.filter(sub => sub.regionId === hubId);
+        // Fetch hierarchy data when the page loads so the modal is instantly ready
+        // Fetch hierarchy data when the page loads so the modal is instantly ready
+        async function fetchModalHierarchy() {
+            try {
+                const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
 
-            const subSelect = document.getElementById('subregionSelect');
-            const subContainer = document.getElementById('subregion-container');
-            const streetContainer = document.getElementById('street-tag-container');
-            const btn = document.getElementById('continueToRatingsBtn');
+                const [stateSnap, lgaSnap, regSnap, subSnap] = await Promise.all([
+                    getDocs(collection(db, "states")),
+                    getDocs(collection(db, "lgas")),
+                    getDocs(collection(db, "regions")),
+                    getDocs(collection(db, "subregions"))
+                ]);
 
-            // Reset downstream fields
-            streetContainer.classList.add('hidden', 'opacity-0');
-            document.getElementById('streetTagInput').value = '';
-            btn.disabled = true;
-            btn.className = "w-full bg-surface-container-high text-gray-400 font-label-caps uppercase tracking-widest py-4 transition-colors neo-border";
+                modalStates = stateSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                modalLGAs = lgaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                modalRegions = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                modalSubregions = subSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            if (filteredSubregions.length > 0) {
-                subSelect.innerHTML = '<option value="" disabled selected>-- Select Neighborhood --</option>' +
-                    filteredSubregions.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-                subContainer.classList.remove('hidden');
-                // Slight delay for fade-in effect
-                setTimeout(() => subContainer.classList.remove('opacity-0'), 50);
-            } else {
-                // If a hub has no subregions yet, we might need a fallback or prompt them to suggest one.
-                subSelect.innerHTML = '<option value="" disabled>No neighborhoods defined yet</option>';
-                subContainer.classList.remove('hidden');
-                setTimeout(() => subContainer.classList.remove('opacity-0'), 50);
+                // Base setup for the State dropdown
+                const stateSelect = document.getElementById('modalStateSelect');
+                stateSelect.innerHTML = '<option value="" disabled selected>-- Select State --</option>' +
+                    modalStates.sort((a, b) => a.name.localeCompare(b.name))
+                        .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+                // IMMEDIATELY PRE-FILL BASED ON CURRENT PAGE CONTEXT
+                window.prefillModalContext();
+
+            } catch (error) {
+                console.error("Failed to load hierarchy data for modal:", error);
             }
         }
 
-        window.handleSubregionSelection = function () {
-            const streetContainer = document.getElementById('street-tag-container');
-            const btn = document.getElementById('continueToRatingsBtn');
+        // NEW: Auto-cascade the dropdowns based on the URL context
+        window.prefillModalContext = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentHubId = urlParams.get('area');
 
-            streetContainer.classList.remove('hidden');
-            setTimeout(() => streetContainer.classList.remove('opacity-0'), 50);
+            if (!currentHubId) return;
+
+            const currentHub = modalRegions.find(r => r.id === currentHubId);
+            // If we have the hub and its 5-tier data, execute the pre-fill
+            if (!currentHub || !currentHub.stateId || !currentHub.lgaId) return;
+
+            // 1. Set State
+            const stateSelect = document.getElementById('modalStateSelect');
+            stateSelect.value = currentHub.stateId;
+
+            // 2. Build and Set LGA
+            const lgaSelect = document.getElementById('modalLGASelect');
+            const filteredLGAs = modalLGAs.filter(l => l.stateId === currentHub.stateId);
+            lgaSelect.innerHTML = '<option value="" disabled>-- Select LGA --</option>' +
+                filteredLGAs.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            lgaSelect.value = currentHub.lgaId;
+            showElement('modal-lga-container');
+
+            // 3. Build and Set Hub
+            const hubSelect = document.getElementById('parentHubSelect');
+            const filteredHubs = modalRegions.filter(h => h.lgaId === currentHub.lgaId);
+            hubSelect.innerHTML = '<option value="" disabled>-- Select a Hub --</option>' +
+                filteredHubs.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+            hubSelect.value = currentHub.id;
+            showElement('modal-hub-container');
+
+            // 4. Build Subregions (Leave empty for user to select)
+            const subSelect = document.getElementById('subregionSelect');
+            const filteredSubregions = modalSubregions.filter(sub => sub.regionId === currentHub.id);
+            if (filteredSubregions.length > 0) {
+                subSelect.innerHTML = '<option value="" disabled selected>-- Select Neighborhood --</option>' +
+                    filteredSubregions.sort((a, b) => a.name.localeCompare(b.name))
+                        .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            } else {
+                subSelect.innerHTML = '<option value="" disabled>No mapped neighborhoods yet</option>';
+            }
+            showElement('subregion-container');
+        };
+
+        // Trigger the fetch immediately
+        fetchModalHierarchy();
+
+        // Trigger the fetch immediately
+        fetchModalHierarchy();
+
+        // --- CASCADING DROPDOWN LOGIC ---
+
+        function hideAndReset(containerId, selectId, defaultText) {
+            const container = document.getElementById(containerId);
+            const select = document.getElementById(selectId);
+            container.classList.add('hidden', 'opacity-0');
+            select.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
+        }
+
+        function showElement(containerId) {
+            const container = document.getElementById(containerId);
+            container.classList.remove('hidden');
+            setTimeout(() => container.classList.remove('opacity-0'), 50);
+        }
+
+        window.handleModalStateSelection = function () {
+            const stateId = document.getElementById('modalStateSelect').value;
+            const lgaSelect = document.getElementById('modalLGASelect');
+
+            // Reset downstream
+            hideAndReset('modal-hub-container', 'parentHubSelect', '-- Select a Hub --');
+            hideAndReset('subregion-container', 'subregionSelect', '-- Select Neighborhood --');
+            hideAndReset('street-tag-container', 'streetTagInput', '');
+            document.getElementById('streetTagInput').value = '';
+
+            const btn = document.getElementById('continueToRatingsBtn');
+            btn.disabled = true;
+            btn.className = "w-full bg-surface-container-high text-gray-400 font-label-caps uppercase tracking-widest py-4 transition-colors neo-border";
+
+            // Populate LGAs
+            const filteredLGAs = modalLGAs.filter(l => l.stateId === stateId);
+            lgaSelect.innerHTML = '<option value="" disabled selected>-- Select LGA --</option>' +
+                filteredLGAs.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+
+            showElement('modal-lga-container');
+        }
+
+        window.handleModalLGASelection = function () {
+            const lgaId = document.getElementById('modalLGASelect').value;
+            const hubSelect = document.getElementById('parentHubSelect');
+
+            // Reset downstream
+            hideAndReset('subregion-container', 'subregionSelect', '-- Select Neighborhood --');
+            hideAndReset('street-tag-container', 'streetTagInput', '');
+            document.getElementById('streetTagInput').value = '';
+            document.getElementById('continueToRatingsBtn').disabled = true;
+
+            // Populate Hubs
+            const filteredHubs = modalRegions.filter(h => h.lgaId === lgaId);
+
+            if (filteredHubs.length > 0) {
+                hubSelect.innerHTML = '<option value="" disabled selected>-- Select a Hub --</option>' +
+                    filteredHubs.sort((a, b) => a.name.localeCompare(b.name))
+                        .map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+            } else {
+                hubSelect.innerHTML = '<option value="" disabled>No mapped Hubs in this LGA yet</option>';
+            }
+
+            showElement('modal-hub-container');
+        }
+
+        window.handleHubSelection = function () {
+            const hubId = document.getElementById('parentHubSelect').value;
+            const subSelect = document.getElementById('subregionSelect');
+
+            // Reset downstream
+            hideAndReset('street-tag-container', 'streetTagInput', '');
+            document.getElementById('streetTagInput').value = '';
+            document.getElementById('continueToRatingsBtn').disabled = true;
+
+            // Populate Neighborhoods
+            const filteredSubregions = modalSubregions.filter(sub => sub.regionId === hubId);
+
+            if (filteredSubregions.length > 0) {
+                subSelect.innerHTML = '<option value="" disabled selected>-- Select Neighborhood --</option>' +
+                    filteredSubregions.sort((a, b) => a.name.localeCompare(b.name))
+                        .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            } else {
+                subSelect.innerHTML = '<option value="" disabled>No mapped neighborhoods yet</option>';
+            }
+
+            showElement('subregion-container');
+        }
+
+        window.handleSubregionSelection = function () {
+            showElement('street-tag-container');
 
             // Enable the continue button
+            const btn = document.getElementById('continueToRatingsBtn');
             btn.disabled = false;
             btn.className = "w-full bg-cobalt text-white font-label-caps uppercase tracking-widest py-4 hover:bg-blue-800 transition-colors neo-border";
         }
@@ -783,8 +975,8 @@
                     : '';
 
                 // The Paywall Lock
-                if (index >= 2 && !window.hasContributed) {
-                    if (index === 2) {
+                if (index >= 6 && !window.hasContributed) {
+                    if (index === 6) {
                         logsContainer.innerHTML += `
                 <div class="relative overflow-hidden neo-border p-6 bg-white h-48 mt-2">
                     <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-white via-white/90 to-transparent p-6 text-center">
@@ -874,6 +1066,7 @@
 
         // NEW: Dedicated Publishing Function
         window.publishReview = async function () {
+            // We use optional chaining and fallback to null
             const btn = document.getElementById('verifyBtn');
             const formBtn = document.querySelector('[onclick="validateFormAndNext()"]');
             const user = auth.currentUser;
@@ -903,11 +1096,23 @@
                 createdAt: { seconds: Math.floor(Date.now() / 1000) }
             };
 
-            // UI Feedback
-            const activeBtn = document.getElementById('state-otp').classList.contains('hidden') ? formBtn : btn;
-            const originalText = activeBtn.innerText;
-            activeBtn.innerText = "Publishing...";
-            activeBtn.disabled = true;
+            // UI Feedback - SAFELY WRAPPED
+            let activeBtn = null;
+            let originalText = "Publishing...";
+
+            // Only try to grab a button if the element exists
+            const otpContainer = document.getElementById('state-otp');
+            if (otpContainer && otpContainer.classList.contains('hidden')) {
+                activeBtn = formBtn;
+            } else {
+                activeBtn = btn;
+            }
+
+            if (activeBtn) {
+                originalText = activeBtn.innerText;
+                activeBtn.innerText = "Publishing...";
+                activeBtn.disabled = true;
+            }
 
             try {
                 if (!user) throw new Error("No user session");
@@ -919,7 +1124,7 @@
                 if (!window.hasContributed) {
                     await setDoc(doc(db, "users", user.uid), {
                         hasContributed: true,
-                        phone: user.phoneNumber || "verified"
+                        email: user.email || null
                     }, { merge: true });
                     localStorage.setItem('setwl_verified', 'true');
                     window.hasContributed = true;
@@ -933,15 +1138,19 @@
                 closeModal();
                 loadFromCache();
 
-                // Reset Button
-                activeBtn.innerText = originalText;
-                activeBtn.disabled = false;
+                // Reset Button safely
+                if (activeBtn) {
+                    activeBtn.innerText = originalText;
+                    activeBtn.disabled = false;
+                }
 
             } catch (e) {
                 console.error(e);
                 alert("Submission failed. Please try again.");
-                activeBtn.innerText = originalText;
-                activeBtn.disabled = false;
+                if (activeBtn) {
+                    activeBtn.innerText = originalText;
+                    activeBtn.disabled = false;
+                }
             }
         };
 

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SETWL - Admin HQ</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .neo-border {
+            border: 2px solid #000000;
+        }
+
+        .neo-border-b {
+            border-bottom: 2px solid #000000;
+        }
+    </style>
+</head>
+
+<body class="bg-[#f9f9f9] text-black antialiased min-h-screen flex flex-col">
+    <header
+        class="bg-white uppercase tracking-widest font-bold top-0 border-b-2 border-black flex justify-between items-center w-full px-6 h-16 sticky z-50">
+        <div class="text-xl font-black tracking-tighter">SETWL <span class="text-blue-600">ADMIN</span></div>
+        <div>
+            <button id="migrateBtn" onclick="window.runMigration()"
+                class="bg-black text-white px-4 py-2 text-xs neo-border hover:bg-zinc-800 transition-colors">
+                Run Migrations</button>
+        </div>
+        <div id="auth-controls" class="flex items-center gap-4">
+            <button id="loginBtn" onclick="window.adminLogin()"
+                class="bg-black text-white px-4 py-2 text-xs neo-border hover:bg-zinc-800 transition-colors">Google
+                Login</button>
+            <button id="logoutBtn" onclick="window.adminLogout()"
+                class="hidden bg-white text-black px-4 py-2 text-xs neo-border hover:bg-zinc-100 transition-colors">Logout</button>
+        </div>
+        <!-- <button onclick="window.nukeAndSeed5Tier()"
+            class="bg-red-600 text-white px-4 py-2 text-xs neo-border hover:bg-red-800 transition-colors">
+            Clean & Seed 5-Tier
+        </button>
+        <button onclick="window.migrateOldRegions()"
+            class="bg-yellow-500 text-black px-4 py-2 text-xs font-bold neo-border hover:bg-yellow-600 transition-colors">
+            Fix Old Regions
+        </button> -->
+        <!-- <button onclick="window.mapRegionsToLGAs()"
+            class="bg-purple-600 text-white px-4 py-2 text-xs font-bold neo-border hover:bg-purple-800 transition-colors">
+            Map Regions to LGAs
+        </button> -->
+        <!-- <button onclick="window.exportSuggestions()"
+            class="bg-gray-800 text-white px-4 py-2 text-xs font-bold neo-border hover:bg-black transition-colors">
+            Export Suggestions
+        </button> -->
+        <button onclick="window.normalizeSuggestions()"
+            class="bg-green-600 text-white px-4 py-2 text-xs font-bold neo-border hover:bg-green-800 transition-colors">
+            Fix & Normalize Suggestions
+        </button>
+    </header>
+
+    <main class="flex-grow w-full max-w-4xl mx-auto px-4 py-8 flex flex-col gap-8">
+
+        <div id="unauthorized-view" class="text-center py-20">
+            <span class="material-symbols-outlined text-6xl mb-4">lock</span>
+            <h1 class="text-3xl font-black uppercase tracking-tight mb-2">Restricted Area</h1>
+            <p class="text-gray-600 font-mono text-sm">Please log in with the authorized admin account to continue.</p>
+        </div>
+
+        <div id="dashboard-view" class="hidden flex flex-col gap-6">
+            <div class="flex justify-between items-end border-b-2 border-black pb-2">
+                <h2 class="text-2xl font-bold uppercase">Pending Hub Suggestions</h2>
+                <button onclick="window.loadSuggestions()"
+                    class="text-sm font-mono hover:text-blue-600 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh
+                </button>
+            </div>
+
+            <div id="suggestions-container" class="flex flex-col gap-4">
+                <p class="font-mono text-sm text-gray-500">Loading suggestions...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, query, where, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6Qke--ciCPKdzDrh4kuYf0Dl6wq635Nw",
+            authDomain: "setwl-62f51.firebaseapp.com",
+            projectId: "setwl-62f51",
+            storageBucket: "setwl-62f51.firebasestorage.app",
+            messagingSenderId: "569446349318",
+            appId: "1:569446349318:web:70b3d0f22f7cb8601fe187"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider('6LcNUc0sAAAAAMNGsQfGTZn85dRxMP9ZRIC_Vmz2'),
+            isTokenAutoRefreshEnabled: true // Allows the token to refresh automatically in the background
+        });
+        const provider = new GoogleAuthProvider();
+
+        const ADMIN_EMAIL = "paulcurious7@gmail.com";
+
+        // UI Elements
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const unauthorizedView = document.getElementById('unauthorized-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const suggestionsContainer = document.getElementById('suggestions-container');
+
+        // Auth Observer
+        // Auth Observer
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === ADMIN_EMAIL) {
+                // User is logged in AND is the Admin
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                unauthorizedView.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                window.loadSuggestions();
+
+            } else if (user && user.isAnonymous) {
+                // IGNORING ANONYMOUS USERS: Just show the login button 
+                // so the admin can click it to overwrite the anonymous session
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                unauthorizedView.classList.remove('hidden');
+                dashboardView.classList.add('hidden');
+
+            } else if (user) {
+                // Logged in with a real Google account, but WRONG email
+                alert("Access Denied. You are not authorized as the admin.");
+                signOut(auth);
+
+            } else {
+                // Completely logged out
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                unauthorizedView.classList.remove('hidden');
+                dashboardView.classList.add('hidden');
+            }
+        });
+
+        // Global Functions
+        window.adminLogin = () => signInWithPopup(auth, provider).catch(err => console.error(err));
+        window.adminLogout = () => signOut(auth);
+
+        window.loadSuggestions = async function () {
+            suggestionsContainer.innerHTML = '<p class="font-mono text-sm text-gray-500">Loading suggestions...</p>';
+            try {
+                const q = query(collection(db, "suggestions"), where("status", "==", "pending"));
+                const snapshot = await getDocs(q);
+
+                suggestionsContainer.innerHTML = '';
+
+                if (snapshot.empty) {
+                    suggestionsContainer.innerHTML = `<div class="p-6 bg-white neo-border text-center font-mono">No pending suggestions. You're all caught up!</div>`;
+                    return;
+                }
+
+                let suggestionsData = [];
+                snapshot.forEach(doc => {
+                    suggestionsData.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort by request count (if duplicates happen)
+                suggestionsData.sort((a, b) => (b.requestCount || 1) - (a.requestCount || 1));
+
+                suggestionsData.forEach(data => {
+                    const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleDateString('en-GB') : 'Recently';
+
+                    let badgeHtml = `<span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-1 uppercase border border-purple-300">New Area Request</span>`;
+
+                    // Display the new 5-tier context clearly
+                    let contextHtml = `
+                        <strong>State:</strong> ${data.stateId || 'Unknown'} <br/>
+                        <strong>LGA:</strong> ${data.suggestedLGA || 'N/A'} <br/>
+                        <strong>Hub:</strong> ${data.suggestedHubName || 'N/A'} <br/> 
+                        <strong>Neighborhood:</strong> ${data.name || 'N/A'} <br/>
+                        <strong>Contact:</strong> ${data.email || 'None provided'}
+                    `;
+
+                    const safeHubName = data.suggestedHubName ? data.suggestedHubName.replace(/'/g, "\\'") : '';
+                    const safeName = data.name ? data.name.replace(/'/g, "\\'") : '';
+                    const safeState = data.stateId || 'ng-lagos';
+
+                    suggestionsContainer.innerHTML += `
+                <div class="bg-white neo-border p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            ${badgeHtml}
+                        </div>
+                        <p class="font-data-mono text-sm leading-relaxed">${contextHtml}</p>
+                        <p class="font-mono text-[10px] text-gray-400">Suggested on: ${dateStr}</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="window.rejectSuggestion('${data.id}')" class="flex-1 md:flex-none px-4 py-3 border-2 border-black bg-red-100 hover:bg-red-200 text-black font-bold uppercase text-[10px] transition-colors">Reject</button>
+                        <button onclick="window.approveSuggestion('${data.id}', '${safeState}', '${safeName}', '${safeHubName}')" class="flex-1 md:flex-none px-4 py-3 border-2 border-black bg-black hover:bg-zinc-800 text-white font-bold uppercase text-[10px] transition-colors">Approve & Map</button>
+                    </div>
+                </div>
+            `;
+                });
+
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+                suggestionsContainer.innerHTML = `<div class="p-6 bg-red-100 text-red-700 neo-border font-mono">Error loading data. Make sure you are logged in as admin.</div>`;
+            }
+        }
+
+        window.approveSuggestion = async function (docId, stateId, neighborhoodName, suggestedHubName) {
+            try {
+                // 1. Setup Hub/Region
+                const newHubId = prompt(`Hub: "${suggestedHubName}"\n\nEnter ID for this Hub (e.g., surulere-01) or paste existing Hub ID to link them:`);
+                if (!newHubId) return;
+
+                // 2. Setup Neighborhood/Subregion
+                const subIdInput = prompt(`Neighborhood: "${neighborhoodName}"\n\nEnter short ID for this neighborhood (e.g. akoka-01):`);
+                if (!subIdInput) return;
+
+                const newSubId = "sub-" + subIdInput.toLowerCase();
+
+                // 3. Create/Merge Tier 1 Region
+                await setDoc(doc(db, "regions", newHubId.toLowerCase()), {
+                    name: suggestedHubName,
+                    stateId: stateId
+                }, { merge: true }); // Merge ensures we don't overwrite if you pasted an existing Hub ID
+
+                // 4. Create Tier 2 Subregion
+                await setDoc(doc(db, "subregions", newSubId), {
+                    name: neighborhoodName,
+                    regionId: newHubId.toLowerCase()
+                });
+
+                // 5. Update Status
+                await updateDoc(doc(db, "suggestions", docId), { status: "approved" });
+
+                alert("Successfully mapped!");
+                window.loadSuggestions();
+            } catch (error) {
+                console.error(error);
+                alert("Error mapping suggestion. Check console.");
+            }
+        }
+
+        window.rejectSuggestion = async function (docId) {
+            const confirmReject = confirm("Are you sure you want to reject and discard this suggestion?");
+            if (!confirmReject) return;
+
+            try {
+                // Update status to rejected
+                await updateDoc(doc(db, "suggestions", docId), {
+                    status: "rejected",
+                    rejectedAt: new Date()
+                });
+                window.loadSuggestions(); // Refresh list
+            } catch (error) {
+                console.error(error);
+                alert("Error rejecting suggestion.");
+            }
+        }
+
+        window.runMigration = async function () {
+            if (!confirm("Are you sure you want to migrate the database? This cannot be undone.")) return;
+
+            try {
+                console.log("Starting Migration...");
+                const batch = writeBatch(db);
+
+                // 1. THE MAPPING DICTIONARY
+                const migrationMap = {
+                    "egb-01": { action: "make_subregion", parentId: "alim-01", name: "Egbeda" },
+                    "ikt-01": { action: "make_subregion", parentId: "alim-01", name: "Ikotun, Abaranje" },
+                    "iyp-01": { action: "make_subregion", parentId: "alim-01", name: "Iyana Paja" },
+                    "ogba-01": { action: "make_subregion", parentId: "ikj-01", name: "Ogba" },
+                    "md-01": { action: "make_subregion", parentId: "ikj-01", name: "Maryland / Mende" },
+                    "akok-01": { action: "make_subregion", parentId: "yb-01", name: "Akoka" },
+                    "ida-01": { action: "make_subregion", parentId: "mus-01", name: "Idi Araba" },
+                    "ajo-01": { action: "make_subregion", parentId: "oshd-01", name: "Ajao Estate" },
+                    "sgtd-01": { action: "make_subregion", parentId: "aj-01", name: "Sangotedo" },
+                    "gb-01": { action: "make_subregion", parentId: "gbagada-01", name: "Gbagada Phase 1" },
+                    "lk-01": { action: "make_subregion", parentId: "lekki-01", name: "Lekki Phase 1" },
+                    "mg-01": { action: "make_subregion", parentId: "magodo-01", name: "Magodo Phase 2" }
+                };
+
+                // 2. MIGRATE REGIONS TO SUB-REGIONS
+                const regionsSnap = await getDocs(collection(db, "regions"));
+
+                regionsSnap.forEach(regionDoc => {
+                    const oldId = regionDoc.id;
+                    const mapData = migrationMap[oldId];
+
+                    if (mapData && mapData.action === "make_subregion") {
+                        // Prepend 'sub-' to the old ID
+                        const newSubId = "sub-" + oldId;
+
+                        // Create it in the new 'subregions' collection
+                        const newSubRef = doc(db, "subregions", newSubId);
+                        batch.set(newSubRef, {
+                            regionId: mapData.parentId,
+                            name: mapData.name,
+                            migratedAt: new Date()
+                        });
+
+                        // Delete the old one from 'regions'
+                        const oldRegRef = doc(db, "regions", oldId);
+                        batch.delete(oldRegRef);
+                        console.log(`Moved ${oldId} to subregions as ${newSubId}`);
+                    }
+                });
+
+                // 3. RE-LINK THE LOGS
+                const logsSnap = await getDocs(collection(db, "logs"));
+
+                logsSnap.forEach(logDoc => {
+                    const logData = logDoc.data();
+                    const logRef = doc(db, "logs", logDoc.id);
+                    const oldAreaId = logData.areaId;
+
+                    const mapData = migrationMap[oldAreaId];
+
+                    if (mapData && mapData.action === "make_subregion") {
+                        // Re-link the log using the new 'sub-' prefixed ID
+                        batch.update(logRef, {
+                            subregionId: "sub-" + oldAreaId,
+                            areaId: null
+                        });
+                        console.log(`Updated log ${logDoc.id} to use subregionId: sub-${oldAreaId}`);
+                    }
+                });
+
+                // 4. COMMIT BATCH
+                console.log("Committing changes to Firestore...");
+                await batch.commit();
+                alert("Migration Complete! Check your Firestore console.");
+
+            } catch (error) {
+                console.error("Migration Failed: ", error);
+                alert("Error during migration. Check console.");
+            }
+        }
+
+        window.seedNationalData = async function () {
+            if (!confirm("This will upload 36 States and 774 LGAs to Firestore. Proceed?")) return;
+
+            let naijaData;
+
+            try {
+                // Fetch the JSON file directly from your project folder
+                const response = await fetch('./nigerian-states.json');
+                if (!response.ok) throw new Error("Could not find nigerian-states.json");
+                naijaData = await response.json();
+            } catch (err) {
+                alert("Failed to load JSON file. Make sure 'nigerian-states.json' is in the same folder as this HTML file, and you are running a local server.");
+                console.error(err);
+                return;
+            }
+
+            try {
+                const { writeBatch, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                console.log("Initializing National Seeding...");
+
+                // Ensure the Country document exists
+                await setDoc(doc(db, "countries", "ng"), {
+                    name: "Nigeria",
+                    code: "NG",
+                    isActive: true
+                });
+
+                let currentBatch = writeBatch(db);
+                let operationCount = 0;
+                let batchCount = 1;
+
+                // Loop through the fetched JSON data
+                for (const [stateName, lgas] of Object.entries(naijaData)) {
+                    // Format state ID (e.g., "ng-lagos")
+                    const stateId = `ng-${stateName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
+                    // Add State to batch
+                    currentBatch.set(doc(db, "states", stateId), {
+                        name: stateName,
+                        countryId: "ng",
+                        isActive: true
+                    });
+                    operationCount++;
+
+                    // Process each LGA in the state
+                    for (const lgaName of lgas) {
+                        // Check batch limit (Firestore max is 500)
+                        if (operationCount >= 450) {
+                            await currentBatch.commit();
+                            console.log(`Committed Batch ${batchCount}`);
+                            currentBatch = writeBatch(db);
+                            operationCount = 0;
+                            batchCount++;
+                        }
+
+                        // Format LGA ID (e.g., "ng-lagos-alimosho")
+                        const cleanLga = lgaName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const lgaId = `${stateId}-${cleanLga}`;
+
+                        // Add LGA as a Region (Hub)
+                        currentBatch.set(doc(db, "regions", lgaId), {
+                            name: lgaName,
+                            stateId: stateId,
+                            countryId: "ng",
+                            isOfficialLGA: true // Tag it so you know it came from the JSON
+                        });
+                        operationCount++;
+                    }
+                }
+
+                // Commit any remaining operations
+                if (operationCount > 0) {
+                    await currentBatch.commit();
+                    console.log(`Committed Final Batch ${batchCount}`);
+                }
+
+                alert("National Seeding Complete! All States and LGAs are now in Firestore.");
+
+            } catch (error) {
+                console.error("Seeding Failed: ", error);
+                alert("Error during seeding. Check console.");
+            }
+        }
+
+        window.nukeAndSeed5Tier = async function () {
+            if (!confirm("This will delete the experimental LGAs from 'regions' and build the new 5-tier 'states' and 'lgas' collections. Proceed?")) return;
+
+            try {
+                const { collection, getDocs, query, where, writeBatch, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                console.log("1. Cleaning up old experimental data...");
+                const regionsRef = collection(db, "regions");
+                const q = query(regionsRef, where("isOfficialLGA", "==", true));
+                const snapshot = await getDocs(q);
+
+                let batch = writeBatch(db);
+                let count = 0;
+
+                snapshot.forEach((docSnap) => {
+                    batch.delete(docSnap.ref);
+                    count++;
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                    console.log(`Deleted ${count} experimental LGA regions.`);
+                }
+
+                console.log("2. Fetching nigerian-states.json...");
+                const response = await fetch('./nigerian-states.json');
+                const naijaData = await response.json();
+
+                console.log("3. Seeding new States and LGAs collections...");
+                batch = writeBatch(db);
+                let opCount = 0;
+
+                // Create Country
+                batch.set(doc(db, "countries", "ng"), { name: "Nigeria", code: "NG", isActive: true });
+                opCount++;
+
+                for (const [stateName, lgas] of Object.entries(naijaData)) {
+                    const stateId = `ng-${stateName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
+                    // Create State
+                    batch.set(doc(db, "states", stateId), {
+                        name: stateName,
+                        countryId: "ng",
+                        isActive: true
+                    });
+                    opCount++;
+
+                    for (const lgaName of lgas) {
+                        if (opCount >= 450) {
+                            await batch.commit();
+                            batch = writeBatch(db);
+                            opCount = 0;
+                        }
+
+                        const cleanLga = lgaName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const lgaId = `${stateId}-${cleanLga}`;
+
+                        // Create LGA in its OWN collection
+                        batch.set(doc(db, "lgas", lgaId), {
+                            name: lgaName,
+                            stateId: stateId,
+                            countryId: "ng"
+                        });
+                        opCount++;
+                    }
+                }
+
+                if (opCount > 0) await batch.commit();
+                alert("Cleanup & 5-Tier Seeding Complete!");
+
+            } catch (error) {
+                console.error("Operation Failed: ", error);
+                alert("Error. Check console.");
+            }
+        }
+        window.migrateOldRegions = async function () {
+            if (!confirm("This will attach all old, manually created regions to 'ng-lagos' so they don't break the new UI. Proceed?")) return;
+
+            try {
+                const { collection, getDocs, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                console.log("Fetching existing regions...");
+                const snap = await getDocs(collection(db, "regions"));
+                let batch = writeBatch(db);
+                let count = 0;
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    // Only update it if it's an old region missing the new stateId
+                    if (!data.stateId && !data.isOfficialLGA) {
+                        batch.update(d.ref, { stateId: "ng-lagos" });
+                        count++;
+                    }
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                    console.log(`Successfully updated ${count} old regions.`);
+                    alert(`Success! ${count} old regions attached to Lagos.`);
+                } else {
+                    alert("No old regions found that needed updating.");
+                }
+
+            } catch (e) {
+                console.error("Migration Error:", e);
+                alert("Error during migration. Check console.");
+            }
+        }
+        window.exportRegions = async function () {
+            try {
+                const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                console.log("Fetching custom regions...");
+                const snap = await getDocs(collection(db, "regions"));
+                let regionsList = [];
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    // Ignore the 774 official LGAs if they are still there
+                    if (!data.isOfficialLGA) {
+                        regionsList.push({ id: d.id, name: data.name });
+                    }
+                });
+
+                const jsonOutput = JSON.stringify(regionsList, null, 2);
+                console.log("=== COPY THE DATA BELOW ===");
+                console.log(jsonOutput);
+                console.log("===========================");
+
+                alert("Success! Press F12, go to the Console, and copy the JSON data.");
+
+            } catch (e) {
+                console.error("Export Error:", e);
+                alert("Error exporting. Check console.");
+            }
+        }
+        window.mapRegionsToLGAs = async function () {
+            if (!confirm("This will attach all 25 custom regions to their correct State and LGA. Proceed?")) return;
+
+            // The Exact Geographic Map
+            const lgaMap = {
+                "aba-01": { stateId: "ng-abia", lgaId: "ng-abia-abasouth" },
+                "agg-01": { stateId: "ng-lagos", lgaId: "ng-lagos-agege" },
+                "aj-01": { stateId: "ng-lagos", lgaId: "ng-lagos-etiosa" },
+                "ajeg-0": { stateId: "ng-lagos", lgaId: "ng-lagos-ajeromiifelodun" },
+                "ajwn-01": { stateId: "ng-ogun", lgaId: "ng-ogun-ifo" },
+                "akt-01": { stateId: "ng-ogun", lgaId: "ng-ogun-ifo" },
+                "alim-01": { stateId: "ng-lagos", lgaId: "ng-lagos-alimosho" },
+                "desa-01": { stateId: "ng-lagos", lgaId: "ng-lagos-ibejulekki" }, // Desa Estate
+                "ejigbo-01": { stateId: "ng-lagos", lgaId: "ng-lagos-oshodiisolo" },
+                "epe-01": { stateId: "ng-lagos", lgaId: "ng-lagos-epe" },
+                "festac-01": { stateId: "ng-lagos", lgaId: "ng-lagos-amuwoodofin" },
+                "ibjl-lk-01": { stateId: "ng-lagos", lgaId: "ng-lagos-ibejulekki" },
+                "ik-01": { stateId: "ng-lagos", lgaId: "ng-lagos-etiosa" },
+                "ikj-01": { stateId: "ng-lagos", lgaId: "ng-lagos-ikeja" },
+                "ikrd-01": { stateId: "ng-lagos", lgaId: "ng-lagos-ikorodu" },
+                "jlgb-01": { stateId: "ng-ogun", lgaId: "ng-ogun-ikenne" }, // Jalugba, Iperu Remo
+                "kt-01": { stateId: "ng-lagos", lgaId: "ng-lagos-kosofe" },
+                "mus-01": { stateId: "ng-lagos", lgaId: "ng-lagos-mushin" },
+                "ogdu-01": { stateId: "ng-lagos", lgaId: "ng-lagos-kosofe" },
+                "oshd-01": { stateId: "ng-lagos", lgaId: "ng-lagos-oshodiisolo" },
+                "prsv-01": { stateId: "ng-lagos", lgaId: "ng-lagos-kosofe" }, // Praiseville Estate
+                "sang-01": { stateId: "ng-ogun", lgaId: "ng-ogun-adoodoota" },
+                "sr-01": { stateId: "ng-lagos", lgaId: "ng-lagos-surulere" },
+                "vi-01": { stateId: "ng-lagos", lgaId: "ng-lagos-etiosa" },
+                "yb-01": { stateId: "ng-lagos", lgaId: "ng-lagos-lagosmainland" }
+            };
+
+            try {
+                const { doc, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                let batch = writeBatch(db);
+                let count = 0;
+
+                for (const [regionId, geographyData] of Object.entries(lgaMap)) {
+                    const regionRef = doc(db, "regions", regionId);
+
+                    // We update both the stateId AND the lgaId so it sits perfectly in the 5-tier system
+                    batch.update(regionRef, {
+                        stateId: geographyData.stateId,
+                        lgaId: geographyData.lgaId
+                    });
+                    count++;
+                }
+
+                await batch.commit();
+                alert(`Success! ${count} regions have been successfully mapped to their official LGAs.`);
+
+            } catch (e) {
+                console.error("Mapping Error:", e);
+                alert("Error during mapping. Check your console.");
+            }
+        }
+        window.exportSuggestions = async function () {
+            try {
+                const { collection, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                console.log("Fetching all pending suggestions...");
+                const q = query(collection(db, "suggestions"), where("status", "==", "pending"));
+                const snap = await getDocs(q);
+
+                let suggestionsList = [];
+
+                snap.forEach(d => {
+                    // Strip out the Firestore Timestamp object for clean JSON export
+                    const data = d.data();
+                    delete data.createdAt;
+
+                    suggestionsList.push({ id: d.id, ...data });
+                });
+
+                console.log("=== COPY THE SUGGESTIONS DATA BELOW ===");
+                console.log(JSON.stringify(suggestionsList, null, 2));
+                console.log("=======================================");
+
+                alert(`Found ${suggestionsList.length} pending suggestions. Press F12 and copy the JSON from the Console.`);
+
+            } catch (e) {
+                console.error("Export Error:", e);
+                alert("Error exporting suggestions. Check console.");
+            }
+        }
+        window.normalizeSuggestions = async function () {
+            if (!confirm("This will upgrade all old suggestions to the new 5-tier schema. Proceed?")) return;
+
+            try {
+                const { collection, getDocs, writeBatch, deleteField } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+
+                console.log("Fetching suggestions to normalize...");
+                const snap = await getDocs(collection(db, "suggestions"));
+                let batch = writeBatch(db);
+                let count = 0;
+
+                // Map of your old Hub IDs to their actual names
+                const oldHubNames = {
+                    "aj-01": "Ajah",
+                    "ikrd-01": "Ikorodu",
+                    "mus-01": "Mushin",
+                    "agg-01": "Agege"
+                };
+
+                snap.forEach(d => {
+                    const data = d.data();
+
+                    // Skip records that are already properly formatted (has stateId)
+                    if (data.stateId && data.stateId !== "") return;
+
+                    let updates = {};
+
+                    // 1. Determine State
+                    updates.stateId = "ng-lagos"; // Default
+
+                    const rawName = (data.name || "").toLowerCase();
+                    const rawHub = (data.suggestedHubName || "").toLowerCase();
+
+                    if (rawName.includes("ogun") || rawHub.includes("ogun") || rawHub === "oke-aro" || rawName === "ilisan" || rawName === "onajobi estate") {
+                        updates.stateId = "ng-ogun";
+                    } else if (rawName.includes("achara-layout")) {
+                        updates.stateId = "ng-enugu";
+                    } else if (rawName.includes("rigiya doruwa")) {
+                        updates.stateId = "ng-zamfara";
+                    }
+
+                    // 2. Determine Hub Name
+                    if (data.parentId && oldHubNames[data.parentId]) {
+                        // If it used an old ID dropdown
+                        updates.suggestedHubName = oldHubNames[data.parentId];
+                    } else if (data.suggestedHubName && data.suggestedHubName.toLowerCase() !== "ogun" && data.suggestedHubName !== "") {
+                        // If they typed a hub name that isn't just the name of a state
+                        updates.suggestedHubName = data.suggestedHubName;
+                    } else {
+                        // Orphan records get marked as Unknown so the Admin can manually route them
+                        updates.suggestedHubName = "Unknown Hub (Manual Map Needed)";
+                    }
+
+                    // 3. Ensure baseline 5-tier fields exist
+                    updates.suggestedLGA = data.suggestedLGA || "Unknown";
+                    updates.email = data.email || null;
+
+                    // 4. Clean up old schema garbage
+                    updates.parentId = deleteField();
+
+                    batch.update(d.ref, updates);
+                    count++;
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                    alert(`Successfully normalized ${count} broken suggestions! You can now load the admin panel safely.`);
+                    window.loadSuggestions(); // Refresh the UI
+                } else {
+                    alert("All suggestions are already in the correct format.");
+                }
+
+            } catch (e) {
+                console.error("Normalization Error:", e);
+                alert("Error normalizing. Check console.");
+            }
+        }
+    </script>
+</body>
+
+</html>
