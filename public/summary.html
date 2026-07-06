@@ -399,7 +399,7 @@
                 </div>
 
                 <div id="street-tag-container" class="space-y-2 hidden opacity-0 transition-opacity duration-300">
-                    <label class="font-label-caps uppercase block">3. Street or Landmark (Optional)</label>
+                    <label class="font-label-caps uppercase block">5. Street or Landmark (Optional)</label>
                     <input type="text" id="streetTagInput" maxlength="40"
                         class="w-full neo-border p-4 bg-transparent font-data-mono focus:outline-none focus:border-cobalt placeholder-gray-400"
                         placeholder="e.g., Admiralty Way, 1004 Estate...">
@@ -781,16 +781,21 @@
             }
         }
 
-        // NEW: Auto-cascade the dropdowns based on the URL context
         window.prefillModalContext = function () {
             const urlParams = new URLSearchParams(window.location.search);
-            const currentHubId = urlParams.get('area');
+            const currentHubId = (urlParams.get('area') || '').trim().toLowerCase();
 
             if (!currentHubId) return;
 
-            const currentHub = modalRegions.find(r => r.id === currentHubId);
-            // If we have the hub and its 5-tier data, execute the pre-fill
-            if (!currentHub || !currentHub.stateId || !currentHub.lgaId) return;
+            // Case-insensitive match to prevent URL casing bugs
+            const currentHub = modalRegions.find(r => r.id.toLowerCase() === currentHubId);
+            
+            // SANITY CHECK: If a region was manually added to the DB without a stateId or lgaId, 
+            // gracefully abort the prefill rather than bricking the form sequence.
+            if (!currentHub || !currentHub.stateId || !currentHub.lgaId) {
+                console.warn("Hub missing State/LGA relational data. Forcing manual selection.");
+                return;
+            }
 
             // 1. Set State
             const stateSelect = document.getElementById('modalStateSelect');
@@ -814,18 +819,47 @@
             hubSelect.value = currentHub.id;
             showElement('modal-hub-container');
 
-            // 4. Build Subregions (Leave empty for user to select)
+            // 4. Build Subregions (UX Fix: Make it feel like a valid "All" option)
             const subSelect = document.getElementById('subregionSelect');
             const filteredSubregions = modalSubregions.filter(sub => sub.regionId === currentHub.id);
             if (filteredSubregions.length > 0) {
-                subSelect.innerHTML = '<option value="" disabled selected>-- Select Neighborhood --</option>' +
+                subSelect.innerHTML = '<option value="NONE">-- General Hub Area (No specific estate) --</option>' +
                     filteredSubregions.sort((a, b) => a.name.localeCompare(b.name))
                         .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             } else {
-                subSelect.innerHTML = '<option value="" disabled>No mapped neighborhoods yet</option>';
+                subSelect.innerHTML = '<option value="NONE">-- General Hub Area (No sub-zones mapped) --</option>';
             }
             showElement('subregion-container');
+
+            // AUTO-ENABLE NEXT STEPS
+            showElement('street-tag-container');
+            const btn = document.getElementById('continueToRatingsBtn');
+            btn.disabled = false;
+            btn.className = "w-full bg-cobalt text-white font-label-caps uppercase tracking-widest py-4 hover:bg-blue-800 transition-colors neo-border";
         };
+
+        window.handleHubSelection = function () {
+            const hubId = document.getElementById('parentHubSelect').value;
+            const subSelect = document.getElementById('subregionSelect');
+
+            const filteredSubregions = modalSubregions.filter(sub => sub.regionId === hubId);
+
+            if (filteredSubregions.length > 0) {
+                subSelect.innerHTML = '<option value="NONE">-- General Hub Area (No specific estate) --</option>' +
+                    filteredSubregions.sort((a, b) => a.name.localeCompare(b.name))
+                        .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            } else {
+                // UX Fix
+                subSelect.innerHTML = '<option value="NONE">-- General Hub Area (No sub-zones mapped) --</option>';
+            }
+
+            showElement('subregion-container');
+            showElement('street-tag-container');
+            
+            const btn = document.getElementById('continueToRatingsBtn');
+            btn.disabled = false;
+            btn.className = "w-full bg-cobalt text-white font-label-caps uppercase tracking-widest py-4 hover:bg-blue-800 transition-colors neo-border";
+        }
 
         // Trigger the fetch immediately
         fetchModalHierarchy();
@@ -893,29 +927,6 @@
             }
 
             showElement('modal-hub-container');
-        }
-
-        window.handleHubSelection = function () {
-            const hubId = document.getElementById('parentHubSelect').value;
-            const subSelect = document.getElementById('subregionSelect');
-
-            // Reset downstream
-            hideAndReset('street-tag-container', 'streetTagInput', '');
-            document.getElementById('streetTagInput').value = '';
-            document.getElementById('continueToRatingsBtn').disabled = true;
-
-            // Populate Neighborhoods
-            const filteredSubregions = modalSubregions.filter(sub => sub.regionId === hubId);
-
-            if (filteredSubregions.length > 0) {
-                subSelect.innerHTML = '<option value="" disabled selected>-- Select Neighborhood --</option>' +
-                    filteredSubregions.sort((a, b) => a.name.localeCompare(b.name))
-                        .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            } else {
-                subSelect.innerHTML = '<option value="" disabled>No mapped neighborhoods yet</option>';
-            }
-
-            showElement('subregion-container');
         }
 
         window.handleSubregionSelection = function () {
@@ -1040,13 +1051,13 @@
                 areaLogs = areaLogs.filter(log => log.subregionId === currentSubregionFilter);
             }
 
-            // --- RENDER MODAL DROPDOWN (If empty) ---
-            const parentSelect = document.getElementById('parentHubSelect');
-            if (parentSelect && parentSelect.options.length <= 1) {
-                parentSelect.innerHTML = '<option value="" disabled selected>-- Select a Hub --</option>' +
-                    allRegions.map(r => `<option value="${r.id}" ${r.id === currentArea ? 'selected' : ''}>${r.name}</option>`).join('');
-                if (currentArea) window.handleHubSelection(); // Auto-populate child dropdown
-            }
+            // // --- RENDER MODAL DROPDOWN (If empty) ---
+            // const parentSelect = document.getElementById('parentHubSelect');
+            // if (parentSelect && parentSelect.options.length <= 1) {
+            //     parentSelect.innerHTML = '<option value="" disabled selected>-- Select a Hub --</option>' +
+            //         allRegions.map(r => `<option value="${r.id}" ${r.id === currentArea ? 'selected' : ''}>${r.name}</option>`).join('');
+            //     if (currentArea) window.handleHubSelection(); // Auto-populate child dropdown
+            // }
 
             // --- RENDER FILTER PILLS ---
             const filterContainer = document.getElementById('subregion-filters');
@@ -1225,9 +1236,9 @@
             }
 
             const newLog = {
-                regionId: document.getElementById('parentHubSelect').value, // Parent
-                subregionId: selectedSubregionId, // Child
-                streetTag: document.getElementById('streetTagInput').value.trim() || null, // Optional Tag
+                regionId: document.getElementById('parentHubSelect').value,
+                subregionId: selectedSubregionId === 'NONE' ? null : selectedSubregionId,
+                streetTag: document.getElementById('streetTagInput').value.trim() || null,
                 powerRating: safeParse('power-val'),
                 waterRating: safeParse('water-val'),
                 securityRating: safeParse('security-val'),

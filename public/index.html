@@ -894,41 +894,39 @@
             // Note: Rain count requires fetching the rain collection by userId, 
             // for now it stays 0 until you want to cache user rain history locally!
         };
+        window.filterRegions = function () {
+            const filter = document.getElementById('searchInput').value.toUpperCase();
+            const noResultsEl = document.getElementById('no-results-msg');
+
+            // If the search bar is cleared out, reset the view back to normal
+            if (!filter) {
+                noResultsEl.classList.add('hidden');
+                window.handleStateFilter(); 
+                return;
+            }
+
+            // Search the ENTIRE cached database, not just what's on screen
+            const filtered = allRegions.filter(r => r.name.toUpperCase().includes(filter));
+
+            // Force the render function to show these specific results
+            renderRegions(filtered);
+
+            if (filtered.length === 0) {
+                noResultsEl.classList.remove('hidden');
+                noResultsEl.innerHTML = `
+                <div class="p-10 text-center neo-border bg-white mt-4">
+                    <p class="font-h3 uppercase mb-2">Neighborhood not found?</p>
+                    <p class="font-data-mono text-sm text-secondary mb-4">We haven't mapped that area yet.</p>
+                    <button onclick="document.getElementById('suggestState').focus()" class="text-cobalt font-bold underline uppercase text-xs">Suggest adding it</button>
+                </div>`;
+            } else {
+                noResultsEl.classList.add('hidden');
+            }
+        };
 
     </script>
 
     <script>
-        function filterRegions() {
-            const filter = document.getElementById('searchInput').value.toUpperCase();
-            const items = document.getElementsByClassName('region-item');
-
-            for (let i = 0; i < items.length; i++) {
-                const hubName = items[i].querySelector('.region-name').textContent.toUpperCase();
-                // Since we don't render sub-lists on the cards anymore, we just search hub names
-                if (hubName.indexOf(filter) > -1) {
-                    items[i].style.display = "";
-                } else {
-                    items[i].style.display = "none";
-                }
-            }
-
-            const visibleItems = Array.from(items).filter(i => i.style.display !== "none").length;
-            const noResultsEl = document.getElementById('no-results-msg');
-
-            if (visibleItems === 0) {
-                noResultsEl.classList.remove('hidden');
-                noResultsEl.innerHTML = `
-            <div class="p-10 text-center neo-border bg-white mt-4">
-                <p class="font-h3 uppercase mb-2">Neighborhood not found?</p>
-                <p class="font-data-mono text-sm text-secondary mb-4">We haven't mapped that area yet.</p>
-                <button onclick="document.getElementById('suggestState').focus()" class="text-cobalt font-bold underline uppercase text-xs">Suggest adding it</button>
-            </div>
-        `;
-            } else {
-                noResultsEl.classList.add('hidden');
-            }
-        }
-
         window.toggleNewHubField = function () {
             const hubSelect = document.getElementById('suggestParentHub');
             const newHubContainer = document.getElementById('newHubNameContainer');
