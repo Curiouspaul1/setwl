@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link rel="icon" type="image/png" href="/public/favicon.png">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap"
         rel="stylesheet" />
@@ -128,25 +129,20 @@
             <p class="font-data-mono text-secondary text-sm md:text-base">Don't trust the agent. Read verified logs from
                 residents before you pay.</p>
         </div>
-        <div id="leaderboard-section" class="mb-8 hidden">
-            <div class="flex items-center gap-2 mb-4">
+        <div id="leaderboard-section" class="mb-2 hidden w-full overflow-hidden">
+            <div class="flex items-center gap-2 mb-3">
                 <span class="material-symbols-outlined text-cobalt text-xl">local_fire_department</span>
                 <h2 class="font-h3 text-primary uppercase text-sm tracking-wider">Top Rated Hubs</h2>
             </div>
-            <div id="leaderboard-cards" class="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
+            <div id="leaderboard-cards" class="flex gap-4 overflow-x-auto pb-4 pr-4 snap-x hide-scrollbar w-full">
             </div>
         </div>
-
-        <div class="w-full relative mt-4">
-            <!-- <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-black">
-                <span class="material-symbols-outlined text-secondary">search</span>
-            </div> -->
+        <div class="w-full relative mt-0">
             <input type="text" id="searchInput" onkeyup="filterRegions()"
                 placeholder=" ... Search for a Hub or Neighborhood (e.g. Ogba, Akoka...)"
                 class="w-full neo-border p-4 bg-white font-data-mono focus:outline-none focus:border-cobalt">
             <div id="no-results-msg"></div>
         </div>
-
         <div class="w-full flex flex-col gap-4">
             <h3 class="font-h3 text-lg font-bold uppercase border-b-2 border-black pb-2 text-black">Available Hubs</h3>
             <div class="mb-8 p-6 neo-border bg-white flex flex-col md:flex-row gap-4 items-end">
@@ -209,23 +205,79 @@
     </main>
 
     <nav
-        class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-20 bg-white border-t-2 border-black">
-        <button
-            class="flex flex-col items-center justify-center bg-black text-white w-full h-full hover:bg-zinc-800 transition-colors">
-            <span class="material-symbols-outlined mb-1">search</span>
-            <span class="font-bold text-[10px] uppercase">SEARCH</span>
-        </button>
-        <button
+        class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-[60px] bg-white border-t-2 border-black">
+        <button onclick="window.toggleMobileDrawer('search')"
             class="flex flex-col items-center justify-center text-black w-full h-full hover:bg-zinc-100 transition-colors">
-            <span class="material-symbols-outlined mb-1">map</span>
-            <span class="font-bold text-[10px] uppercase">MAP</span>
+            <span class="material-symbols-outlined mb-0.5 text-[20px]">search</span>
+            <span class="font-bold text-[9px] uppercase tracking-widest">Search</span>
         </button>
-        <button
+        <button onclick="window.toggleMobileDrawer('rain')"
+            class="flex flex-col items-center justify-center text-black w-full h-full hover:bg-zinc-100 transition-colors border-x-2 border-black bg-surface-container-low">
+            <span class="material-symbols-outlined mb-0.5 text-[20px] text-cobalt">thunderstorm</span>
+            <span class="font-bold text-[9px] uppercase tracking-widest">Rain Check</span>
+        </button>
+        <button onclick="window.toggleMobileDrawer('profile')"
             class="flex flex-col items-center justify-center text-black w-full h-full hover:bg-zinc-100 transition-colors">
-            <span class="material-symbols-outlined mb-1">person</span>
-            <span class="font-bold text-[10px] uppercase">PROFILE</span>
+            <span class="material-symbols-outlined mb-0.5 text-[20px]">person</span>
+            <span class="font-bold text-[9px] uppercase tracking-widest">Profile</span>
         </button>
     </nav>
+
+    <div id="mobile-drawer-container"
+        class="md:hidden fixed inset-0 z-[60] bg-white flex flex-col transition-transform duration-300 translate-y-full">
+
+        <div class="h-16 border-b-2 border-black flex justify-between items-center px-4 bg-white flex-shrink-0">
+            <h2 id="drawer-title" class="font-h3 uppercase text-lg tracking-tight">Menu</h2>
+            <button onclick="window.closeMobileDrawer()" class="p-2 -mr-2">
+                <span class="material-symbols-outlined block">close</span>
+            </button>
+        </div>
+
+        <div id="drawer-search" class="drawer-content hidden flex-col flex-grow overflow-y-auto p-4 gap-4">
+            <input type="text" id="mobileSearchInput" onkeyup="window.mobileFilterRegions()"
+                placeholder="Search areas..."
+                class="w-full neo-border p-4 bg-white font-data-mono focus:outline-none focus:border-cobalt">
+            <div id="mobile-search-results" class="flex flex-col gap-2">
+            </div>
+        </div>
+
+        <div id="drawer-rain"
+            class="drawer-content hidden flex-col flex-grow overflow-y-auto p-4 gap-4 bg-surface-container-low">
+            <input type="text" id="rainSearchInput" onkeyup="window.filterRainList()" placeholder="Filter locations..."
+                class="w-full neo-border p-3 bg-white font-data-mono text-sm focus:outline-none focus:border-cobalt">
+            <div id="mobile-rain-list" class="flex flex-col gap-2">
+            </div>
+        </div>
+
+        <div id="drawer-profile" class="drawer-content hidden flex-col flex-grow overflow-y-auto p-6 gap-6">
+            <div class="flex flex-col items-center text-center gap-2 mt-4">
+                <div class="w-20 h-20 bg-black rounded-full flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined text-4xl">person</span>
+                </div>
+                <h3 id="profile-email" class="font-data-mono font-bold text-lg mt-2">Loading...</h3>
+                <span id="profile-status"
+                    class="font-label-caps text-[10px] uppercase tracking-widest px-3 py-1 neo-border bg-yellow-300">Checking
+                    Status</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="neo-border p-4 text-center bg-white">
+                    <span class="font-h1 text-3xl block" id="profile-gists-count">0</span>
+                    <span class="font-label-caps text-[10px] uppercase tracking-widest text-secondary">Gists
+                        Dropped</span>
+                </div>
+                <div class="neo-border p-4 text-center bg-white">
+                    <span class="font-h1 text-3xl block" id="profile-rain-count">0</span>
+                    <span class="font-label-caps text-[10px] uppercase tracking-widest text-secondary">Weather
+                        Intel</span>
+                </div>
+            </div>
+
+            <button onclick="window.location.reload()"
+                class="w-full py-4 neo-border bg-black text-white font-label-caps uppercase mt-auto">Refresh
+                App</button>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -247,6 +299,7 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const analytics = getAnalytics(app);
+        // self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
         const appCheck = initializeAppCheck(app, {
             provider: new ReCaptchaEnterpriseProvider('6LcNUc0sAAAAAMNGsQfGTZn85dRxMP9ZRIC_Vmz2'),
             isTokenAutoRefreshEnabled: true // Allows the token to refresh automatically in the background
@@ -267,24 +320,31 @@
         let allLogs = [];
 
         window.syncAppData = async function () {
-            // 1. LOAD FROM CACHE FIRST (Instant UI)
+            const loaderBar = document.getElementById('loader-bar');
+            if (loaderBar) loaderBar.style.width = '30%'; // Start progress
+
+            // 1. LOAD FROM CACHE FIRST
             allRegions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
             allStates = JSON.parse(localStorage.getItem('setwl_states') || "[]");
             allLGAs = JSON.parse(localStorage.getItem('setwl_lgas') || "[]");
             allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
 
-            // If we have cached data, render it immediately
             if (allRegions.length > 0) {
                 renderInitialUI();
+                if (loaderBar) loaderBar.style.width = '60%';
             }
 
             try {
-                // 2. FETCH FRESH DATA FROM FIRESTORE
-                const [regSnap, stateSnap, lgaSnap, logSnap] = await Promise.all([
+                // 2. FETCH FRESH DATA FROM BASELINE AND WEATHER
+                const fortyFiveMinsAgo = new Date(Date.now() - 45 * 60 * 1000);
+                const rainQuery = query(collection(db, "rainChecks"), where("createdAt", ">=", fortyFiveMinsAgo));
+
+                const [regSnap, stateSnap, lgaSnap, logSnap, rainSnap] = await Promise.all([
                     getDocs(collection(db, "regions")),
                     getDocs(collection(db, "states")),
                     getDocs(collection(db, "lgas")),
-                    getDocs(collection(db, "logs"))
+                    getDocs(collection(db, "logs")),
+                    getDocs(rainQuery) // Parallelized! Adds zero extra load time
                 ]);
 
                 allRegions = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -292,18 +352,76 @@
                 allLGAs = lgaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 allLogs = logSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                // 3. STORE IN LOCALSTORAGE FOR NEXT VISIT
+                // 3. COMPILE REGION WEATHER VOTE AGGREGATIONS
+                const compiledRainMap = {};
+                // Tally up raw reports by regionId
+                const rainTallies = {};
+                rainSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (!rainTallies[data.regionId]) {
+                        rainTallies[data.regionId] = { clear: 0, overcast: 0, drizzle: 0, heavy: 0, total: 0 };
+                    }
+                    if (rainTallies[data.regionId][data.condition] !== undefined) {
+                        rainTallies[data.regionId][data.condition]++;
+                        rainTallies[data.regionId].total++;
+                    }
+                });
+
+                // Define priority weights for resolving exact ties (Higher number wins)
+                const severityWeights = { heavy: 4, drizzle: 3, overcast: 2, clear: 1 };
+
+                // Calculate winners for each region id block
+                Object.keys(rainTallies).forEach(rId => {
+                    const tallies = rainTallies[rId];
+                    if (tallies.total > 0) {
+                        const winner = Object.keys(tallies)
+                            .filter(k => k !== 'total')
+                            .reduce((a, b) => {
+                                if (tallies[a] > tallies[b]) return a;
+                                if (tallies[b] > tallies[a]) return b;
+
+                                // INTEL TIE-BREAKER: If votes are equal, prioritize safety/severity
+                                return (severityWeights[a] || 0) >= (severityWeights[b] || 0) ? a : b;
+                            });
+
+                        compiledRainMap[rId] = { condition: winner, count: tallies[winner], total: tallies.total };
+                    }
+                });
+
+                // Expose globally so renderRegions function can pull natively
+                window.currentRainStatusMap = compiledRainMap;
+
+                // 4. STORE IN CACHE
                 localStorage.setItem('setwl_regions', JSON.stringify(allRegions));
                 localStorage.setItem('setwl_states', JSON.stringify(allStates));
-                localStorage.setItem('setwl_lgas', JSON.stringify(allLGAs));
+                localStorage.setItem('setwl_lgas', JSON.stringify(allLogs));
                 localStorage.setItem('setwl_logs', JSON.stringify(allLogs));
 
-                // 4. UPDATE UI WITH FRESH DATA
+                if (loaderBar) loaderBar.style.width = '100%';
+
+                // 5. UPDATE UI
                 renderInitialUI();
-                loadAutocomplete(); // Refresh search suggestions
+                loadAutocomplete();
+
+                // 6. HIDE SPLASH SCREEN
+                setTimeout(hideSplashScreen, 500);
 
             } catch (e) {
                 console.error("Sync Error:", e);
+                hideSplashScreen();
+            }
+        }
+
+        function hideSplashScreen() {
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.classList.add('opacity-0');
+                // Wait for the CSS transition to finish before removing from layout
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    // Set flag so it doesn't show again this session
+                    sessionStorage.setItem('setwl_session_active', 'true');
+                }, 500);
             }
         }
 
@@ -406,6 +524,7 @@
         }
 
         // Updated Render Function to show Review Counts
+        // Updated Render Function to show Review Counts AND Live Rain Status
         function renderRegions(regionsToRender) {
             const container = document.getElementById('regions-container');
 
@@ -425,6 +544,9 @@
                 stats[log.regionId].totalScore += avg;
             });
 
+            // Read live rain status from our global map (populated in syncAppData)
+            const rainStatusMap = window.currentRainStatusMap || {};
+
             container.innerHTML = regionsToRender.map(region => {
                 const regionStats = stats[region.id] || { count: 0, totalScore: 0 };
                 const reviewCount = regionStats.count;
@@ -436,11 +558,32 @@
                 else if (avgScore >= 2.5) barColor = "bg-yellow-500";
                 else if (avgScore > 0) barColor = "bg-red-500";
 
+                // Build the live weather badge if data exists
+                // Build the live weather badge if data exists
+                let weatherBadgeHtml = '';
+                const weather = rainStatusMap[region.id];
+                if (weather) {
+                    if (weather.condition === 'heavy') {
+                        weatherBadgeHtml = `<span class="inline-flex items-center gap-1 font-data-mono text-[9px] font-bold uppercase bg-red-100 text-red-600 border border-red-600 px-2 py-0.5 rounded-full animate-pulse">🌊 Heavy Rain / Flood</span>`;
+                    } else if (weather.condition === 'drizzle') {
+                        weatherBadgeHtml = `<span class="inline-flex items-center gap-1 font-data-mono text-[9px] font-bold uppercase bg-blue-50 text-blue-500 border border-blue-400 px-2 py-0.5 rounded-full">🌧️ Drizzle</span>`;
+                    } else if (weather.condition === 'overcast') {
+                        weatherBadgeHtml = `<span class="inline-flex items-center gap-1 font-data-mono text-[9px] font-bold uppercase bg-zinc-100 text-zinc-600 border border-zinc-400 px-2 py-0.5 rounded-full">☁️ Overcast</span>`;
+                    } else if (weather.condition === 'clear') {
+                        // ADDED: Clear Sky view handler
+                        weatherBadgeHtml = `<span class="inline-flex items-center gap-1 font-data-mono text-[9px] font-bold uppercase bg-yellow-50 text-yellow-600 border border-yellow-500 px-2 py-0.5 rounded-full">☀️ Clear Sky</span>`;
+                    }
+                }
+
                 return `
             <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
                  class="region-item bg-white neo-border p-6 cursor-pointer hover:bg-black hover:text-white transition-all group flex flex-col justify-between h-full">
                 <div class="flex justify-between items-start mb-4">
-                    <h3 class="region-name font-h3 uppercase text-lg">${region.name}</h3>
+                    <div class="space-y-1">
+                        <h3 class="region-name font-h3 uppercase text-lg">${region.name}</h3>
+                        <!-- RENDER WEATHER BADGE RIGHT UNDER THE HUB NAME -->
+                        ${weatherBadgeHtml}
+                    </div>
                     <span class="material-symbols-outlined text-cobalt group-hover:text-white transition-colors">arrow_forward</span>
                 </div>
                 <div class="mt-auto flex justify-between items-end">
@@ -634,6 +777,121 @@
             }
         }
 
+        // --- MOBILE DRAWER LOGIC ---
+        const drawerContainer = document.getElementById('mobile-drawer-container');
+        const drawerTitle = document.getElementById('drawer-title');
+
+        window.toggleMobileDrawer = function (target) {
+            // Hide all content blocks
+            document.querySelectorAll('.drawer-content').forEach(el => el.classList.add('hidden'));
+
+            // Show the target block
+            document.getElementById(`drawer-${target}`).classList.remove('hidden', 'flex');
+            document.getElementById(`drawer-${target}`).classList.add('flex');
+
+            // Set Title & Init Data
+            if (target === 'search') {
+                drawerTitle.innerText = "FIND AREA";
+                document.getElementById('mobileSearchInput').focus();
+                window.mobileFilterRegions(); // Init list
+            } else if (target === 'rain') {
+                drawerTitle.innerText = "LIVE RAIN CHECK";
+                window.renderMobileRainList();
+            } else if (target === 'profile') {
+                drawerTitle.innerText = "YOUR INTEL";
+                window.renderProfileData();
+            }
+
+            // Slide it up
+            drawerContainer.classList.remove('translate-y-full');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        };
+
+        window.closeMobileDrawer = function () {
+            drawerContainer.classList.add('translate-y-full');
+            document.body.style.overflow = '';
+        };
+
+        window.mobileFilterRegions = function () {
+            const filter = document.getElementById('mobileSearchInput').value.toUpperCase();
+            const resultsContainer = document.getElementById('mobile-search-results');
+
+            const filtered = allRegions.filter(r => r.name.toUpperCase().indexOf(filter) > -1);
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `<div class="p-6 text-center neo-border bg-white italic font-data-mono text-sm text-secondary">No matching areas found.</div>`;
+                return;
+            }
+
+            resultsContainer.innerHTML = filtered.map(region => `
+                <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
+                     class="bg-white neo-border p-4 flex justify-between items-center active:bg-zinc-100">
+                    <span class="font-h3 uppercase text-sm">${region.name}</span>
+                    <span class="material-symbols-outlined text-cobalt text-sm">arrow_forward</span>
+                </div>
+            `).join('');
+        };
+
+        window.renderMobileRainList = function () {
+            const listContainer = document.getElementById('mobile-rain-list');
+            const rainStatusMap = window.currentRainStatusMap || {};
+
+            listContainer.innerHTML = allRegions.map(region => {
+                const weather = rainStatusMap[region.id];
+                let icon = "☀️"; let text = "Clear"; let color = "text-yellow-600";
+
+                if (weather) {
+                    if (weather.condition === 'heavy') { icon = "🌊"; text = "Heavy / Flood"; color = "text-red-600 font-bold"; }
+                    else if (weather.condition === 'drizzle') { icon = "🌧️"; text = "Drizzle"; color = "text-blue-500"; }
+                    else if (weather.condition === 'overcast') { icon = "☁️"; text = "Overcast"; color = "text-zinc-600"; }
+                }
+
+                return `
+                <div class="rain-list-item bg-white neo-border p-3 flex justify-between items-center" data-name="${region.name.toUpperCase()}">
+                    <span class="font-h3 uppercase text-xs truncate max-w-[60%]">${region.name}</span>
+                    <span class="font-data-mono text-[10px] uppercase ${color}">${icon} ${text}</span>
+                </div>`;
+            }).join('');
+        };
+
+        window.filterRainList = function () {
+            const filter = document.getElementById('rainSearchInput').value.toUpperCase();
+            const items = document.getElementsByClassName('rain-list-item');
+            for (let i = 0; i < items.length; i++) {
+                items[i].style.display = items[i].getAttribute('data-name').indexOf(filter) > -1 ? "" : "none";
+            }
+        };
+
+        window.renderProfileData = function () {
+            const user = window.auth ? window.auth.currentUser : null;
+            const emailEl = document.getElementById('profile-email');
+            const statusEl = document.getElementById('profile-status');
+            const gistCountEl = document.getElementById('profile-gists-count');
+
+            if (!user) {
+                emailEl.innerText = "Anonymous User";
+                statusEl.innerText = "UNVERIFIED";
+                statusEl.className = "font-label-caps text-[10px] uppercase tracking-widest px-3 py-1 neo-border bg-gray-200 text-gray-500";
+                gistCountEl.innerText = "0";
+                return;
+            }
+
+            emailEl.innerText = user.email || "Verified Resident";
+
+            const isVerified = localStorage.getItem('setwl_verified') === 'true';
+            if (isVerified) {
+                statusEl.innerText = "VERIFIED RESIDENT";
+                statusEl.className = "font-label-caps text-[10px] uppercase tracking-widest px-3 py-1 neo-border bg-cobalt text-white";
+            }
+
+            // Calculate exact contributions from cache
+            const userLogs = allLogs.filter(l => l.userId === user.uid);
+            gistCountEl.innerText = userLogs.length;
+
+            // Note: Rain count requires fetching the rain collection by userId, 
+            // for now it stays 0 until you want to cache user rain history locally!
+        };
+
     </script>
 
     <script>
@@ -684,7 +942,6 @@
                 suggestInput.placeholder = "Neighborhood Name (e.g. Akoka)";
             }
         };
-
     </script>
 </body>
 
