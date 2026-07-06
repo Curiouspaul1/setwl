@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link rel="icon" type="image/png" href="/public/favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap"
         rel="stylesheet" />
@@ -299,10 +299,13 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const analytics = getAnalytics(app);
-        // self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+
+        if (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) {
+            self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        }
         const appCheck = initializeAppCheck(app, {
             provider: new ReCaptchaEnterpriseProvider('6LcNUc0sAAAAAMNGsQfGTZn85dRxMP9ZRIC_Vmz2'),
-            isTokenAutoRefreshEnabled: true // Allows the token to refresh automatically in the background
+            isTokenAutoRefreshEnabled: true
         });
 
         let existingSuggestions = [];
