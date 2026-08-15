@@ -113,9 +113,9 @@
                 </div>
             </div>
 
-            <div class="hidden md:flex items-center gap-2">
+            <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-cobalt text-[18px]">forum</span>
-                <span class="font-h3 text-[10px] uppercase text-primary">Total Gists:</span>
+                <span class="font-h3 text-[10px] uppercase text-primary hidden sm:inline">Total Gists:</span>
                 <span id="global-log-counter" class="font-data-mono text-sm font-bold text-black">--</span>
             </div>
 
@@ -321,6 +321,7 @@
         let allLGAs = [];
         let allRegions = [];
         let allLogs = [];
+        let allSubregions = [];
 
         window.syncAppData = async function () {
             const loaderBar = document.getElementById('loader-bar');
@@ -331,6 +332,7 @@
             allStates = JSON.parse(localStorage.getItem('setwl_states') || "[]");
             allLGAs = JSON.parse(localStorage.getItem('setwl_lgas') || "[]");
             allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
+            allSubregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
 
             if (allRegions.length > 0) {
                 renderInitialUI();
@@ -342,18 +344,20 @@
                 const fortyFiveMinsAgo = new Date(Date.now() - 45 * 60 * 1000);
                 const rainQuery = query(collection(db, "rainChecks"), where("createdAt", ">=", fortyFiveMinsAgo));
 
-                const [regSnap, stateSnap, lgaSnap, logSnap, rainSnap] = await Promise.all([
+                const [regSnap, stateSnap, lgaSnap, logSnap, rainSnap, subSnap] = await Promise.all([
                     getDocs(collection(db, "regions")),
                     getDocs(collection(db, "states")),
                     getDocs(collection(db, "lgas")),
                     getDocs(collection(db, "logs")),
-                    getDocs(rainQuery) // Parallelized! Adds zero extra load time
+                    getDocs(rainQuery), // Parallelized! Adds zero extra load time
+                    getDocs(collection(db, "subregions"))
                 ]);
 
                 allRegions = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 allStates = stateSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 allLGAs = lgaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 allLogs = logSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                allSubregions = subSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
                 // 3. COMPILE REGION WEATHER VOTE AGGREGATIONS
                 const compiledRainMap = {};
@@ -397,8 +401,9 @@
                 // 4. STORE IN CACHE
                 localStorage.setItem('setwl_regions', JSON.stringify(allRegions));
                 localStorage.setItem('setwl_states', JSON.stringify(allStates));
-                localStorage.setItem('setwl_lgas', JSON.stringify(allLogs));
+                localStorage.setItem('setwl_lgas', JSON.stringify(allLGAs));
                 localStorage.setItem('setwl_logs', JSON.stringify(allLogs));
+                localStorage.setItem('setwl_subregions', JSON.stringify(allSubregions));
 
                 if (loaderBar) loaderBar.style.width = '100%';
 
@@ -537,14 +542,26 @@
             }
 
             // Calculate counts and average scores
+            // A log can be tagged directly to a hub (regionId), to a specific
+            // neighborhood within a hub (subregionId), or - for old migrated
+            // data - to a legacy areaId. All three need to roll up to the
+            // parent hub here, otherwise hubs with mostly subregion-tagged
+            // logs (e.g. Surulere) undercount badly on this page even though
+            // summary.html shows the correct total.
+            const subToHub = {};
+            allSubregions.forEach(sub => { subToHub[sub.id] = sub.regionId; });
+
             const stats = {};
             allLogs.forEach(log => {
-                if (!stats[log.regionId]) stats[log.regionId] = { count: 0, totalScore: 0 };
+                const hubId = log.regionId || subToHub[log.subregionId] || log.areaId;
+                if (!hubId) return;
+
+                if (!stats[hubId]) stats[hubId] = { count: 0, totalScore: 0 };
 
                 const avg = ((log.powerRating || 0) + (log.waterRating || 0) + (log.securityRating || 0) + (log.drainageRating || 0) + (log.serenityRating || 0)) / 5;
 
-                stats[log.regionId].count += 1;
-                stats[log.regionId].totalScore += avg;
+                stats[hubId].count += 1;
+                stats[hubId].totalScore += avg;
             });
 
             // Read live rain status from our global map (populated in syncAppData)
@@ -610,12 +627,25 @@
         window.renderLeaderboard = () => {
             const logs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
             const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+            const subregions = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
 
-            // 1. Calculate stats for each area
+            // 1. Calculate stats for each hub
+            // NOTE: this used to group by log.areaId, but logs are actually
+            // saved with regionId (+ optional subregionId) - see
+            // window.submitSuggestion / the log-save flow in summary.html.
+            // areaId is only present on old migrated logs, so real logs were
+            // silently invisible to the leaderboard. Resolve to the parent
+            // hub the same way summary.html does.
+            const subToHub = {};
+            subregions.forEach(sub => { subToHub[sub.id] = sub.regionId; });
+
             const areaStats = {};
             logs.forEach(log => {
-                if (!areaStats[log.areaId]) {
-                    areaStats[log.areaId] = { totalScore: 0, count: 0 };
+                const hubId = log.regionId || subToHub[log.subregionId] || log.areaId;
+                if (!hubId) return;
+
+                if (!areaStats[hubId]) {
+                    areaStats[hubId] = { totalScore: 0, count: 0 };
                 }
 
                 // Average the 5 categories for this specific log
@@ -627,8 +657,8 @@
                     (log.serenityRating || 0)
                 ) / 5;
 
-                areaStats[log.areaId].totalScore += logAverage;
-                areaStats[log.areaId].count += 1;
+                areaStats[hubId].totalScore += logAverage;
+                areaStats[hubId].count += 1;
             });
 
             // 2. Map stats back to regions and sort
