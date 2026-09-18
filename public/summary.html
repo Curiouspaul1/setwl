@@ -331,6 +331,22 @@
             </div>
         </section>
 
+        <section class="neo-border bg-white flex flex-col md:flex-row text-black">
+            <div
+                class="w-full md:w-1/3 p-6 md:p-8 neo-border-b md:neo-border-b-0 md:neo-border-r bg-surface-container-low flex flex-col justify-center">
+                <h2 class="font-h2 text-h2 text-primary mb-2">AVERAGE RENT</h2>
+                <p class="font-body text-body text-secondary">Self-reported ranges from residents, grouped by property
+                    type and averaged into a typical low-high band — a single blended number wouldn't mean much when
+                    a self-con and a duplex are in the same hub.</p>
+            </div>
+
+            <div class="w-full md:w-2/3 p-6 md:p-8 flex flex-col justify-center">
+                <p id="rentSummaryEmpty" class="font-data-mono text-xs text-secondary uppercase">No rent data reported
+                    for this area yet. Be the first to add yours when you drop a Gist.</p>
+                <div id="rentSummaryList" class="space-y-3 hidden"></div>
+            </div>
+        </section>
+
         <section class="flex flex-col gap-6">
             <div class="neo-border-b pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
@@ -516,6 +532,34 @@
                         <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">4</button>
                         <button class="flex-1 h-12 neo-border hover:bg-surface-container-high font-bold">5</button>
                     </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-label-caps uppercase flex justify-between items-center">
+                        <span>Annual Rent Range (Optional)</span>
+                    </label>
+                    <select id="rentPropertyType"
+                        class="w-full neo-border bg-white p-4 font-data-mono text-xs focus:outline-none focus:border-cobalt cursor-pointer">
+                        <option value="">Property Type</option>
+                        <option value="Self-Con / Room">Self-Con / Room</option>
+                        <option value="Mini Flat">Mini Flat</option>
+                        <option value="1 Bedroom Flat">1 Bedroom Flat</option>
+                        <option value="2 Bedroom Flat">2 Bedroom Flat</option>
+                        <option value="3 Bedroom Flat">3 Bedroom Flat</option>
+                        <option value="Duplex / Detached">Duplex / Detached</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" id="rentMin" min="0" step="1000"
+                            class="w-full neo-border bg-transparent p-4 font-data-mono text-xs focus:outline-none focus:border-cobalt"
+                            placeholder="\u20a6 Min per year">
+                        <input type="number" id="rentMax" min="0" step="1000"
+                            class="w-full neo-border bg-transparent p-4 font-data-mono text-xs focus:outline-none focus:border-cobalt"
+                            placeholder="\u20a6 Max per year">
+                    </div>
+                    <p class="font-data-mono text-[9px] text-gray-500 leading-tight normal-case">Give a realistic range
+                        for this property type in the area (e.g. \u20a6800,000\u2013\u20a61,200,000). Helps future renters
+                        gauge typical cost. Skip if you'd rather not share.</p>
                 </div>
 
                 <div class="space-y-2">
@@ -1030,6 +1074,58 @@
             }
         };
 
+        // Renders the "AVERAGE RENT" card. Grouped by property type rather
+        // than one blended figure - averaging a self-con with a duplex
+        // together would produce a number that's meaningless to anyone.
+        const RENT_TYPE_ORDER = ["Self-Con / Room", "Mini Flat", "1 Bedroom Flat", "2 Bedroom Flat", "3 Bedroom Flat", "Duplex / Detached", "Other"];
+
+        function renderRentSummary(areaLogs) {
+            const emptyEl = document.getElementById('rentSummaryEmpty');
+            const listEl = document.getElementById('rentSummaryList');
+            if (!emptyEl || !listEl) return;
+
+            const rentLogs = areaLogs.filter(log => log.rentMin && log.rentMax && log.rentPropertyType);
+
+            if (rentLogs.length === 0) {
+                emptyEl.classList.remove('hidden');
+                listEl.classList.add('hidden');
+                listEl.innerHTML = '';
+                return;
+            }
+
+            const groups = {};
+            rentLogs.forEach(log => {
+                if (!groups[log.rentPropertyType]) groups[log.rentPropertyType] = { totalMin: 0, totalMax: 0, count: 0 };
+                groups[log.rentPropertyType].totalMin += log.rentMin;
+                groups[log.rentPropertyType].totalMax += log.rentMax;
+                groups[log.rentPropertyType].count += 1;
+            });
+
+            const types = Object.keys(groups).sort((a, b) => {
+                const ia = RENT_TYPE_ORDER.indexOf(a);
+                const ib = RENT_TYPE_ORDER.indexOf(b);
+                return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+            });
+
+            listEl.innerHTML = types.map(type => {
+                const g = groups[type];
+                const avgMin = Math.round(g.totalMin / g.count / 1000) * 1000; // round to nearest 1,000
+                const avgMax = Math.round(g.totalMax / g.count / 1000) * 1000;
+                const formattedMin = '\u20a6' + avgMin.toLocaleString('en-NG');
+                const formattedMax = '\u20a6' + avgMax.toLocaleString('en-NG');
+                return `
+                <div class="flex justify-between items-center border-b border-outline-variant pb-2">
+                    <span class="font-data-mono text-xs uppercase text-primary">${type}</span>
+                    <span class="font-data-mono text-xs font-bold text-cobalt">${formattedMin} \u2013 ${formattedMax}/yr
+                        <span class="text-secondary font-normal normal-case">(${g.count} report${g.count !== 1 ? 's' : ''})</span>
+                    </span>
+                </div>`;
+            }).join('');
+
+            emptyEl.classList.add('hidden');
+            listEl.classList.remove('hidden');
+        }
+
         function loadFromCache() {
             const allLogs = JSON.parse(localStorage.getItem('setwl_logs') || "[]");
             const allRegions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
@@ -1076,6 +1172,9 @@
             const zoneEl = document.getElementById('zone-id-display');
             if (countEl) countEl.innerText = areaLogs.length;
             if (zoneEl) zoneEl.innerText = currentSubregionFilter === 'all' ? currentArea.toUpperCase() : currentSubregionFilter.toUpperCase();
+
+            // --- RENT SUMMARY (independent of whether there are ratings/comments yet) ---
+            renderRentSummary(areaLogs);
 
             // --- EMPTY STATE HANDLING ---
             if (areaLogs.length === 0) {
@@ -1235,6 +1334,28 @@
                 return;
             }
 
+            // --- OPTIONAL RENT DATA (min-max range) ---
+            const rentPropertyType = document.getElementById('rentPropertyType').value || null;
+            const rentMinRaw = document.getElementById('rentMin').value;
+            const rentMaxRaw = document.getElementById('rentMax').value;
+            const rentMin = rentMinRaw ? parseInt(rentMinRaw, 10) : null;
+            const rentMax = rentMaxRaw ? parseInt(rentMaxRaw, 10) : null;
+
+            // If they started filling rent, make sure the whole set is there
+            // and coherent - a half-filled or inverted range isn't usable for
+            // the area's rent averages.
+            const rentStarted = rentPropertyType || rentMin || rentMax;
+            if (rentStarted) {
+                if (!rentPropertyType || !rentMin || !rentMax) {
+                    alert("For the rent range, please fill in the property type, minimum, and maximum (or leave all blank to skip).");
+                    return;
+                }
+                if (rentMin > rentMax) {
+                    alert("Minimum rent can't be higher than maximum rent - check the range you entered.");
+                    return;
+                }
+            }
+
             const newLog = {
                 regionId: document.getElementById('parentHubSelect').value,
                 subregionId: selectedSubregionId === 'NONE' ? null : selectedSubregionId,
@@ -1244,6 +1365,9 @@
                 securityRating: safeParse('security-val'),
                 drainageRating: safeParse('drainage-val'),
                 serenityRating: safeParse('serenity-val'),
+                rentMin: rentMin,
+                rentMax: rentMax,
+                rentPropertyType: rentPropertyType,
                 comment: document.querySelector('textarea').value,
                 userId: user.uid,
                 createdAt: { seconds: Math.floor(Date.now() / 1000) }

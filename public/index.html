@@ -82,11 +82,30 @@
             <p class="font-mono text-[10px] mt-4 uppercase tracking-[0.2em] text-outline">Syncing Neighborhood Intel...
             </p>
         </div>
+
+        <!-- Side-attraction nudge: only fades in if the sync is taking a moment,
+             so it doesn't flash uselessly on fast/cached loads. Deliberately
+             understated - it's a bonus, not a core feature. -->
+        <a id="splash-icallon-nudge" href="https://icallon.netlify.app/" target="_blank" rel="noopener"
+            class="opacity-0 transition-opacity duration-700 mt-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-400 hover:text-cobalt">
+            <span class="material-symbols-outlined text-[14px]">sports_esports</span>
+            Bored waiting? Play a quick round of Icallon
+        </a>
     </div>
 
     <script>
         if (sessionStorage.getItem('setwl_session_active')) {
             document.getElementById('splash-screen').style.display = 'none';
+        } else {
+            // Only reveal the nudge if the splash is still up after a beat -
+            // fast/cached loads never see it at all.
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                const nudge = document.getElementById('splash-icallon-nudge');
+                if (splash && nudge && splash.style.display !== 'none' && !splash.classList.contains('opacity-0')) {
+                    nudge.classList.remove('opacity-0');
+                }
+            }, 1400);
         }
     </script>
 
@@ -193,6 +212,95 @@
                         <input type="email" id="suggestEmail"
                             class="w-full neo-border bg-white p-3 font-data-mono text-xs focus:outline-none shadow-[2px_2px_0px_0px_rgba(0,53,190,1)] border-cobalt mt-2"
                             placeholder="Your Email (to notify you when it's live)">
+                    </div>
+
+                    <!-- CAPTURE THE REVIEW NOW so we don't lose the motion/intent while the area is pending approval -->
+                    <button type="button" onclick="window.toggleSuggestReview()" id="suggestReviewToggle"
+                        class="w-full flex items-center justify-between p-3 neo-border bg-white hover:bg-zinc-50 transition-colors">
+                        <span class="font-label-caps uppercase text-xs text-cobalt">+ Drop your review now (recommended)</span>
+                        <span class="material-symbols-outlined text-[16px] text-cobalt" id="suggestReviewChevron">expand_more</span>
+                    </button>
+
+                    <div id="suggestReviewFields" class="hidden flex-col gap-4 p-4 neo-border bg-white">
+                        <p class="font-data-mono text-secondary text-[10px] leading-tight">You already know the gist — drop it now.
+                            It'll publish automatically the moment we add this area, so you don't have to remember to come back.</p>
+
+                        <div class="space-y-2">
+                            <label class="font-label-caps uppercase text-xs flex justify-between items-center">
+                                <span>⚡ Power</span>
+                                <span id="suggest-power-val" class="text-cobalt">-</span>
+                            </label>
+                            <div class="flex gap-1 metric-group" data-metric="suggest-power">
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="font-label-caps uppercase text-xs flex justify-between items-center">
+                                <span>💧 Water</span>
+                                <span id="suggest-water-val" class="text-cobalt">-</span>
+                            </label>
+                            <div class="flex gap-1 metric-group" data-metric="suggest-water">
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="font-label-caps uppercase text-xs flex justify-between items-center">
+                                <span>🛡️ Security</span>
+                                <span id="suggest-security-val" class="text-cobalt">-</span>
+                            </label>
+                            <div class="flex gap-1 metric-group" data-metric="suggest-security">
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="font-label-caps uppercase text-xs flex justify-between items-center">
+                                <span>🌊 Drainage</span>
+                                <span id="suggest-drainage-val" class="text-cobalt">-</span>
+                            </label>
+                            <div class="flex gap-1 metric-group" data-metric="suggest-drainage">
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="font-label-caps uppercase text-xs flex justify-between items-center">
+                                <span>🍃 Serenity</span>
+                                <span id="suggest-serenity-val" class="text-cobalt">-</span>
+                            </label>
+                            <div class="flex gap-1 metric-group" data-metric="suggest-serenity">
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="font-label-caps uppercase text-xs">The Gist (Optional)</label>
+                            <textarea id="suggestComment"
+                                class="w-full h-20 neo-border bg-transparent p-3 font-data-mono text-xs focus:outline-none focus:border-cobalt"
+                                placeholder="e.g., Light is decent, water's borehole-only, fairly quiet at night..."></textarea>
+                        </div>
                     </div>
 
                     <button onclick="window.submitSuggestion()" id="suggestBtn"
@@ -556,21 +664,45 @@
                 const hubId = log.regionId || subToHub[log.subregionId] || log.areaId;
                 if (!hubId) return;
 
-                if (!stats[hubId]) stats[hubId] = { count: 0, totalScore: 0 };
+                if (!stats[hubId]) stats[hubId] = { count: 0, totalScore: 0, rentGroups: {} };
 
                 const avg = ((log.powerRating || 0) + (log.waterRating || 0) + (log.securityRating || 0) + (log.drainageRating || 0) + (log.serenityRating || 0)) / 5;
 
                 stats[hubId].count += 1;
                 stats[hubId].totalScore += avg;
+
+                if (log.rentMin && log.rentMax && log.rentPropertyType) {
+                    if (!stats[hubId].rentGroups[log.rentPropertyType]) {
+                        stats[hubId].rentGroups[log.rentPropertyType] = { totalMin: 0, totalMax: 0, count: 0 };
+                    }
+                    stats[hubId].rentGroups[log.rentPropertyType].totalMin += log.rentMin;
+                    stats[hubId].rentGroups[log.rentPropertyType].totalMax += log.rentMax;
+                    stats[hubId].rentGroups[log.rentPropertyType].count += 1;
+                }
             });
+
+            // Pick the most-reported property type per hub as the one-line
+            // headline range for the grid card - the full per-type
+            // breakdown lives on the hub's own summary page.
+            const getHeadlineRent = (rentGroups) => {
+                const types = Object.keys(rentGroups);
+                if (types.length === 0) return null;
+                types.sort((a, b) => rentGroups[b].count - rentGroups[a].count);
+                const top = types[0];
+                const g = rentGroups[top];
+                const avgMin = Math.round((g.totalMin / g.count) / 1000) * 1000;
+                const avgMax = Math.round((g.totalMax / g.count) / 1000) * 1000;
+                return { type: top, avgMin, avgMax, count: g.count };
+            };
 
             // Read live rain status from our global map (populated in syncAppData)
             const rainStatusMap = window.currentRainStatusMap || {};
 
             container.innerHTML = regionsToRender.map(region => {
-                const regionStats = stats[region.id] || { count: 0, totalScore: 0 };
+                const regionStats = stats[region.id] || { count: 0, totalScore: 0, rentGroups: {} };
                 const reviewCount = regionStats.count;
                 const avgScore = reviewCount > 0 ? (regionStats.totalScore / reviewCount).toFixed(1) : "0.0";
+                const headlineRent = getHeadlineRent(regionStats.rentGroups || {});
 
                 // Determine bar color based on score
                 let barColor = "bg-gray-200";
@@ -603,6 +735,10 @@
                         <h3 class="region-name font-h3 uppercase text-lg">${region.name}</h3>
                         <!-- RENDER WEATHER BADGE RIGHT UNDER THE HUB NAME -->
                         ${weatherBadgeHtml}
+                        ${headlineRent ? `
+                        <div class="font-data-mono text-[9px] font-bold text-cobalt group-hover:text-white uppercase">
+                            \u20a6${headlineRent.avgMin.toLocaleString('en-NG')}\u2013\u20a6${headlineRent.avgMax.toLocaleString('en-NG')}/yr <span class="font-normal text-gray-500 group-hover:text-gray-300">(${headlineRent.type}, ${headlineRent.count} report${headlineRent.count !== 1 ? 's' : ''})</span>
+                        </div>` : ''}
                     </div>
                     <span class="material-symbols-outlined text-cobalt group-hover:text-white transition-colors">arrow_forward</span>
                 </div>
@@ -738,6 +874,47 @@
             }
         }
 
+        // --- DRAFT REVIEW CAPTURE (for the "Can't find your area?" flow) ---
+        // Lets someone drop their review at the same time they request a new
+        // area, so we don't lose their motion/intent while waiting on
+        // approval. Mirrors the rating-button pattern used in summary.html.
+        window.toggleSuggestReview = function () {
+            const fields = document.getElementById('suggestReviewFields');
+            const chevron = document.getElementById('suggestReviewChevron');
+            const isHidden = fields.classList.contains('hidden');
+
+            if (isHidden) {
+                fields.classList.remove('hidden');
+                fields.classList.add('flex');
+                chevron.innerText = 'expand_less';
+            } else {
+                fields.classList.add('hidden');
+                fields.classList.remove('flex');
+                chevron.innerText = 'expand_more';
+            }
+        };
+
+        const suggestSafeParse = (id) => {
+            const el = document.getElementById(id);
+            return el ? parseInt(el.innerText.charAt(0)) : null;
+        };
+
+        document.querySelectorAll('#suggestReviewFields .metric-group').forEach(group => {
+            const buttons = group.querySelectorAll('button');
+            const metricName = group.getAttribute('data-metric');
+            const valueDisplay = document.getElementById(`${metricName}-val`);
+            buttons.forEach((btn, index) => {
+                btn.onclick = () => {
+                    const rating = index + 1;
+                    valueDisplay.innerText = `${rating}/5`;
+                    buttons.forEach((b, i) => {
+                        if (i <= index) { b.classList.add('bg-black', 'text-white'); }
+                        else { b.classList.remove('bg-black', 'text-white'); }
+                    });
+                };
+            });
+        });
+
         window.submitSuggestion = async function () {
             const state = document.getElementById('suggestState').value;
             const lga = document.getElementById('suggestLGA').value.trim();
@@ -748,6 +925,29 @@
 
             if (!state || !hub || !neighborhood) {
                 alert("State, Major Hub, and Neighborhood are required.");
+                return;
+            }
+
+            // --- READ THE OPTIONAL DRAFT REVIEW ---
+            const draftRatings = {
+                powerRating: suggestSafeParse('suggest-power-val'),
+                waterRating: suggestSafeParse('suggest-water-val'),
+                securityRating: suggestSafeParse('suggest-security-val'),
+                drainageRating: suggestSafeParse('suggest-drainage-val'),
+                serenityRating: suggestSafeParse('suggest-serenity-val'),
+            };
+            const draftComment = document.getElementById('suggestComment').value.trim();
+            const draftStarted = Object.values(draftRatings).some(v => v !== null) || draftComment !== "";
+
+            // If they started rating, don't let a half-finished review slip
+            // through silently - same rule summary.html uses for real logs.
+            if (draftStarted && Object.values(draftRatings).some(v => v === null)) {
+                alert("Looks like you started your review - please rate all 5 categories (or clear them if you'd rather skip it for now).");
+                return;
+            }
+
+            if (draftStarted && !email && !auth.currentUser) {
+                alert("Add your email so we can let you know the moment your review goes live - otherwise we've got no way to credit it to you.");
                 return;
             }
 
@@ -787,7 +987,16 @@
                     status: "pending",
                     requestCount: 1, // Added request count back for sorting
                     createdAt: serverTimestamp(),
-                    userId: auth.currentUser?.uid || "anonymous"
+                    userId: auth.currentUser?.uid || "anonymous",
+                    // The reviewer's original review, captured now so it isn't
+                    // lost while the area waits on approval. Promote this into
+                    // a real "logs" doc (with the new regionId/subregionId)
+                    // when the suggestion is approved.
+                    hasDraftReview: draftStarted,
+                    draftReview: draftStarted ? {
+                        ...draftRatings,
+                        comment: draftComment || null,
+                    } : null
                 });
 
                 // Reset UI
@@ -795,8 +1004,17 @@
                 document.getElementById('suggestHub').value = "";
                 document.getElementById('suggestNeighborhood').value = "";
                 document.getElementById('suggestEmail').value = "";
+                document.getElementById('suggestComment').value = "";
+                document.querySelectorAll('#suggestReviewFields .metric-group').forEach(group => {
+                    const metricName = group.getAttribute('data-metric');
+                    document.getElementById(`${metricName}-val`).innerText = "-";
+                    group.querySelectorAll('button').forEach(b => b.classList.remove('bg-black', 'text-white'));
+                });
+                document.getElementById('suggestReviewFields').classList.add('hidden');
+                document.getElementById('suggestReviewFields').classList.remove('flex');
+                document.getElementById('suggestReviewChevron').innerText = 'expand_more';
 
-                btn.innerText = "THANK YOU!";
+                btn.innerText = draftStarted ? "SAVED! WE'LL PUBLISH IT ONCE LIVE" : "THANK YOU!";
                 setTimeout(() => {
                     btn.innerText = "SUBMIT REQUEST";
                     btn.disabled = false;
