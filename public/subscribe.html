@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Email preferences - SETWL</title>
+<meta name="robots" content="noindex, nofollow" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  *{border-radius:0 !important}
+  body{font-family:'Space Grotesk',sans-serif;background:#001356;color:#F8F8F8}
+  .card{border:2px solid #000;background:#F8F8F8;color:#000}
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-5">
+  <div class="w-full max-w-lg">
+    <div class="mb-6">
+      <div class="font-bold text-2xl">SETWL</div>
+      <div class="h-1 w-16 bg-[#FF5733] my-2"></div>
+      <div class="text-[11px] uppercase tracking-[2px] text-[#5979FF]">Area trust layer</div>
+    </div>
+
+    <div id="card" class="card p-6">
+      <p class="font-bold text-lg mb-2">One moment...</p>
+      <p class="text-sm" id="msg">Saving your preference.</p>
+    </div>
+
+    <div class="mt-5 text-[11px] uppercase tracking-wider">
+      <a href="index.html" class="underline text-[#5979FF]">Back to Setwl</a>
+      &nbsp;&middot;&nbsp;<a href="privacy.html" class="underline text-[#5979FF]">Privacy</a>
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// NOTE: replace this block with the same firebaseConfig object used in index.html
+const firebaseConfig = {
+    apiKey: "AIzaSyB6Qke--ciCPKdzDrh4kuYf0Dl6wq635Nw",
+    authDomain: "setwl-62f51.firebaseapp.com",
+    projectId: "setwl-62f51",
+    storageBucket: "setwl-62f51.firebasestorage.app",
+    messagingSenderId: "569446349318",
+    appId: "1:569446349318:web:70b3d0f22f7cb8601fe187"
+};
+
+const card = document.getElementById('card');
+const params = new URLSearchParams(window.location.search);
+const token = (params.get('t') || '').trim();
+const action = (params.get('a') || 'sub').trim();   // 'sub' | 'unsub'
+
+function show(title, body, tone) {
+  card.className = 'card p-6' + (tone === 'bad' ? ' bg-red-100' : tone === 'good' ? ' bg-green-100' : '');
+  card.innerHTML = `<p class="font-bold text-lg mb-2">${title}</p><p class="text-sm leading-relaxed">${body}</p>`;
+}
+
+(async () => {
+  if (!token) {
+    return show('Link not recognised',
+      'This link is missing its code. If you copied it out of an email, try clicking the button in the email instead.', 'bad');
+  }
+  if (!firebaseConfig) {
+    return show('Not configured yet',
+      'This page needs the Firebase config block from index.html pasting in before it will work.', 'bad');
+  }
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    await signInAnonymously(auth);
+
+    const subscribed = action !== 'unsub';
+    await updateDoc(doc(db, "emailConsents", token), {
+      status: subscribed ? 'subscribed' : 'unsubscribed',
+      consentedAt: new Date()
+    });
+
+    if (subscribed) {
+      show('You are on the list.',
+        'We will let you know when new gists land on areas you care about, when heavy rain or flooding is reported nearby, and when rent figures move. Nothing else.<br><br>Changed your mind later? Every email has a link to stop.', 'good');
+    } else {
+      show('Done - you are off the list.',
+        'We will not send you updates. You may still get a one-off message about something you personally posted.', 'good');
+    }
+  } catch (err) {
+    console.error(err);
+    show('That link did not work',
+      'It may have already been used, or it may have expired. Email <a class="underline" href="mailto:hello@setwl.com.ng">hello@setwl.com.ng</a> and we will sort it out by hand.', 'bad');
+  }
+})();
+</script>
+</body>
+</html>

@@ -5,6 +5,25 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>SETWL - Area Trust Layer</title>
+    <meta name="description"
+        content="Setwl is a free, crowdsourced area trust layer for Nigerian renters. Residents rate their street on power, water, security, drainage and serenity - the things agents leave out. Check the area before you pay agreement and commission." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Setwl" />
+    <meta property="og:title" content="Setwl - the reality check for renters" />
+    <meta property="og:description"
+        content="Real reviews of Lagos streets and estates, written by the people who already live there. Free to read, two minutes to add yours." />
+    <meta property="og:url" content="https://setwl.com.ng/" />
+    <meta property="og:image" content="https://setwl.com.ng/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Setwl - know the street before you pay for it." />
+    <meta property="og:locale" content="en_NG" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Setwl - the reality check for renters" />
+    <meta name="twitter:description"
+        content="Real reviews of Lagos streets and estates, written by the people who already live there. Free to read, two minutes to add yours." />
+    <meta name="twitter:image" content="https://setwl.com.ng/og-image.png" />
+    <link rel="canonical" href="https://setwl.com.ng/" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
@@ -217,13 +236,17 @@
                     <!-- CAPTURE THE REVIEW NOW so we don't lose the motion/intent while the area is pending approval -->
                     <button type="button" onclick="window.toggleSuggestReview()" id="suggestReviewToggle"
                         class="w-full flex items-center justify-between p-3 neo-border bg-white hover:bg-zinc-50 transition-colors">
-                        <span class="font-label-caps uppercase text-xs text-cobalt">+ Drop your review now (recommended)</span>
-                        <span class="material-symbols-outlined text-[16px] text-cobalt" id="suggestReviewChevron">expand_more</span>
+                        <span class="font-label-caps uppercase text-xs text-cobalt">+ Drop your review now
+                            (recommended)</span>
+                        <span class="material-symbols-outlined text-[16px] text-cobalt"
+                            id="suggestReviewChevron">expand_more</span>
                     </button>
 
                     <div id="suggestReviewFields" class="hidden flex-col gap-4 p-4 neo-border bg-white">
-                        <p class="font-data-mono text-secondary text-[10px] leading-tight">You already know the gist — drop it now.
-                            It'll publish automatically the moment we add this area, so you don't have to remember to come back.</p>
+                        <p class="font-data-mono text-secondary text-[10px] leading-tight">You already know the gist —
+                            drop it now.
+                            It'll publish automatically the moment we add this area, so you don't have to remember to
+                            come back.</p>
 
                         <div class="space-y-2">
                             <label class="font-label-caps uppercase text-xs flex justify-between items-center">
@@ -231,11 +254,16 @@
                                 <span id="suggest-power-val" class="text-cobalt">-</span>
                             </label>
                             <div class="flex gap-1 metric-group" data-metric="suggest-power">
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
                             </div>
                         </div>
 
@@ -245,11 +273,16 @@
                                 <span id="suggest-water-val" class="text-cobalt">-</span>
                             </label>
                             <div class="flex gap-1 metric-group" data-metric="suggest-water">
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
                             </div>
                         </div>
 
@@ -259,11 +292,16 @@
                                 <span id="suggest-security-val" class="text-cobalt">-</span>
                             </label>
                             <div class="flex gap-1 metric-group" data-metric="suggest-security">
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
                             </div>
                         </div>
 
@@ -273,11 +311,16 @@
                                 <span id="suggest-drainage-val" class="text-cobalt">-</span>
                             </label>
                             <div class="flex gap-1 metric-group" data-metric="suggest-drainage">
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
                             </div>
                         </div>
 
@@ -287,11 +330,16 @@
                                 <span id="suggest-serenity-val" class="text-cobalt">-</span>
                             </label>
                             <div class="flex gap-1 metric-group" data-metric="suggest-serenity">
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
-                                <button type="button" class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">1</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">2</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">3</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">4</button>
+                                <button type="button"
+                                    class="flex-1 h-10 neo-border hover:bg-surface-container-high font-bold text-sm">5</button>
                             </div>
                         </div>
 
@@ -311,6 +359,16 @@
             </div>
         </div>
     </main>
+
+    <footer class="w-full border-t-2 border-black bg-white mt-8 mb-[60px] md:mb-0">
+        <div class="max-w-2xl mx-auto px-4 py-5 flex flex-wrap gap-x-6 gap-y-2 justify-between items-center text-[11px] uppercase font-bold">
+            <span class="text-gray-500 font-normal">Setwl &mdash; the reality check for renters</span>
+            <span class="flex gap-4">
+                <a href="privacy.html" class="hover:text-cobalt">Privacy</a>
+                <a href="terms.html" class="hover:text-cobalt">Terms</a>
+            </span>
+        </div>
+    </footer>
 
     <nav
         class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-[60px] bg-white border-t-2 border-black">
@@ -733,6 +791,10 @@
                 <div class="flex justify-between items-start mb-4">
                     <div class="space-y-1">
                         <h3 class="region-name font-h3 uppercase text-lg">${region.name}</h3>
+                        ${region._match && region._match.length ? `
+                        <div class="font-data-mono text-[9px] uppercase text-cobalt group-hover:text-white">
+                            ${region._match.slice(0, 2).join(' &middot; ')}
+                        </div>` : ''}
                         <!-- RENDER WEATHER BADGE RIGHT UNDER THE HUB NAME -->
                         ${weatherBadgeHtml}
                         ${headlineRent ? `
@@ -844,19 +906,36 @@
         }
 
         function loadAutocomplete() {
-            const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
             const dataList = document.getElementById('regionsList');
+            if (!dataList) return;
 
-            // Only run if the search bar datalist exists on the page
-            if (dataList) {
-                dataList.innerHTML = '';
-                regions.sort((a, b) => a.name.localeCompare(b.name)).forEach(r => {
+            const regions = JSON.parse(localStorage.getItem('setwl_regions') || "[]");
+            const subs = JSON.parse(localStorage.getItem('setwl_subregions') || "[]");
+            const lgas = JSON.parse(localStorage.getItem('setwl_lgas') || "[]");
+
+            // Suggest anything a searcher might reasonably type: the hub, a
+            // neighbourhood inside it, or the LGA it sits in. Only LGAs that
+            // actually contain a hub are offered, so the list never promises
+            // somewhere with nothing behind it.
+            const liveLgaIds = new Set(regions.filter(r => !r.isOfficialLGA).map(r => r.lgaId).filter(Boolean));
+
+            const entries = [
+                ...regions.filter(r => !r.isOfficialLGA).map(r => ({ name: r.name, hint: '' })),
+                ...subs.map(x => ({ name: x.name, hint: 'neighbourhood' })),
+                ...lgas.filter(l => liveLgaIds.has(l.id)).map(l => ({ name: l.name, hint: 'LGA' }))
+            ];
+
+            const seen = new Set();
+            dataList.innerHTML = '';
+            entries
+                .filter(e => e.name && !seen.has(e.name.toLowerCase()) && seen.add(e.name.toLowerCase()))
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(e => {
                     const opt = document.createElement('option');
-                    // We set the value to the name so it shows nicely in the search bar
-                    opt.value = r.name;
+                    opt.value = e.name;
+                    if (e.hint) opt.label = `${e.name} (${e.hint})`;
                     dataList.appendChild(opt);
                 });
-            }
         }
 
         async function fetchTotalLogsCount() {
@@ -1064,20 +1143,27 @@
         };
 
         window.mobileFilterRegions = function () {
-            const filter = document.getElementById('mobileSearchInput').value.toUpperCase();
+            const raw = document.getElementById('mobileSearchInput').value.trim();
             const resultsContainer = document.getElementById('mobile-search-results');
 
-            const filtered = allRegions.filter(r => r.name.toUpperCase().indexOf(filter) > -1);
+            if (!raw) { resultsContainer.innerHTML = ''; return; }
 
-            if (filtered.length === 0) {
-                resultsContainer.innerHTML = `<div class="p-6 text-center neo-border bg-white italic font-data-mono text-sm text-secondary">No matching areas found.</div>`;
+            const hits = window.searchHubs(raw);
+
+            if (hits.length === 0) {
+                const nearMiss = window.searchNearMiss(raw);
+                resultsContainer.innerHTML = `<div class="p-6 text-center neo-border bg-white font-data-mono text-sm text-secondary">
+                    ${nearMiss || `Nothing mapped for &ldquo;${raw}&rdquo; yet.`}</div>`;
                 return;
             }
 
-            resultsContainer.innerHTML = filtered.map(region => `
+            resultsContainer.innerHTML = hits.map(({ region, reasons }) => `
                 <div onclick="window.location.href='summary.html?area=${region.id}&name=${encodeURIComponent(region.name)}'" 
                      class="bg-white neo-border p-4 flex justify-between items-center active:bg-zinc-100">
-                    <span class="font-h3 uppercase text-sm">${region.name}</span>
+                    <span class="flex flex-col">
+                        <span class="font-h3 uppercase text-sm">${region.name}</span>
+                        ${reasons.length ? `<span class="font-data-mono text-[10px] text-cobalt normal-case">${reasons[0]}</span>` : ''}
+                    </span>
                     <span class="material-symbols-outlined text-cobalt text-sm">arrow_forward</span>
                 </div>
             `).join('');
@@ -1142,30 +1228,121 @@
             // Note: Rain count requires fetching the rain collection by userId, 
             // for now it stays 0 until you want to cache user rain history locally!
         };
+        // =================================================================
+        // SEARCH
+        // People search for where they think they live, not for whichever
+        // level the database happens to store. "Ojo" is an LGA, "Iyana Iba"
+        // is a hub inside it, "Akoka" is a neighbourhood inside Yaba - all
+        // three should find something. So every hub is matched against its
+        // own name, the LGA it sits in, its state, and the names of its
+        // neighbourhoods, and each result says which of those matched.
+        // =================================================================
+        const sNorm = (v) => (v || '').toString().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const sTight = (v) => sNorm(v).replace(/ /g, '');
+
+        // 0-100, tolerant of case, punctuation and spacing, so "iyana-iba",
+        // "IYANA IBA" and "iyanaiba" all reach the same place.
+        function matchScore(query, target) {
+            const q = sNorm(query), t = sNorm(target);
+            if (!q || !t) return 0;
+            const qt = sTight(query), tt = sTight(target);
+            if (tt === qt) return 100;
+            if (tt.startsWith(qt)) return 88;
+            if (tt.includes(qt)) return 76;
+            const qTok = q.split(' ').filter(Boolean);
+            const tTok = t.split(' ').filter(Boolean);
+            const hits = qTok.filter(w => tTok.some(x => x.startsWith(w) || w.startsWith(x)));
+            if (hits.length === qTok.length) return 68;   // every word accounted for
+            if (hits.length) return 40 + hits.length * 8;
+            return 0;
+        }
+
+        // A hub's own name outranks one of its neighbourhoods, which outranks
+        // the LGA it happens to sit in.
+        const SEARCH_WEIGHTS = { hub: 1, sub: 0.92, lga: 0.85, state: 0.5 };
+
+        window.searchHubs = function (query) {
+            if (!sNorm(query)) return [];
+            const lgaById = Object.fromEntries((allLGAs || []).map(l => [l.id, l]));
+            const stateById = Object.fromEntries((allStates || []).map(s => [s.id, s]));
+            const subsByHub = {};
+            (allSubregions || []).forEach(s => {
+                (subsByHub[s.regionId] = subsByHub[s.regionId] || []).push(s);
+            });
+
+            return (allRegions || []).filter(r => !r.isOfficialLGA).map(r => {
+                let best = 0;
+                const reasons = [];
+
+                best = Math.max(best, matchScore(query, r.name) * SEARCH_WEIGHTS.hub);
+
+                let bestSub = null, bestSubScore = 0;
+                (subsByHub[r.id] || []).forEach(s => {
+                    const sc = matchScore(query, s.name) * SEARCH_WEIGHTS.sub;
+                    if (sc > bestSubScore) { bestSubScore = sc; bestSub = s; }
+                });
+                if (bestSubScore >= 40) {
+                    best = Math.max(best, bestSubScore);
+                    reasons.push(`Covers ${bestSub.name}`);
+                }
+
+                const lga = lgaById[r.lgaId];
+                if (lga) {
+                    const sc = matchScore(query, lga.name) * SEARCH_WEIGHTS.lga;
+                    if (sc >= 40) { best = Math.max(best, sc); reasons.push(`In ${lga.name} LGA`); }
+                }
+
+                const st = stateById[r.stateId];
+                if (st) {
+                    const sc = matchScore(query, st.name) * SEARCH_WEIGHTS.state;
+                    if (sc >= 40) { best = Math.max(best, sc); reasons.push(st.name); }
+                }
+
+                return { region: r, score: Math.round(best), reasons };
+            }).filter(x => x.score >= 40)
+              .sort((a, b) => b.score - a.score || a.region.name.localeCompare(b.region.name));
+        };
+
+        // Did they name a real place we simply have no hub for yet? Lets the
+        // empty state say something useful instead of "not found".
+        window.searchNearMiss = function (query) {
+            const lga = (allLGAs || []).find(l => matchScore(query, l.name) >= 76);
+            if (lga) {
+                const st = (allStates || []).find(s => s.id === lga.stateId);
+                return `<strong>${lga.name}</strong> LGA${st ? ' in ' + st.name : ''} is on the map, but nobody has added an area inside it yet.`;
+            }
+            const st = (allStates || []).find(s => matchScore(query, s.name) >= 88);
+            if (st) return `<strong>${st.name}</strong> is on the map, but no areas there have been added yet.`;
+            return null;
+        };
+
         window.filterRegions = function () {
-            const filter = document.getElementById('searchInput').value.toUpperCase();
+            const raw = document.getElementById('searchInput').value.trim();
+            const filter = raw.toUpperCase();
             const noResultsEl = document.getElementById('no-results-msg');
 
             // If the search bar is cleared out, reset the view back to normal
             if (!filter) {
                 noResultsEl.classList.add('hidden');
-                window.handleStateFilter(); 
+                window.handleStateFilter();
                 return;
             }
 
-            // Search the ENTIRE cached database, not just what's on screen
-            const filtered = allRegions.filter(r => r.name.toUpperCase().includes(filter));
+            // Match against hub names, their neighbourhoods, their LGA and
+            // their state - not just the hub name.
+            const hits = window.searchHubs(raw);
+            const filtered = hits.map(h => ({ ...h.region, _match: h.reasons }));
 
-            // Force the render function to show these specific results
             renderRegions(filtered);
 
             if (filtered.length === 0) {
+                const nearMiss = window.searchNearMiss(raw);
                 noResultsEl.classList.remove('hidden');
                 noResultsEl.innerHTML = `
                 <div class="p-10 text-center neo-border bg-white mt-4">
-                    <p class="font-h3 uppercase mb-2">Neighborhood not found?</p>
-                    <p class="font-data-mono text-sm text-secondary mb-4">We haven't mapped that area yet.</p>
-                    <button onclick="document.getElementById('suggestState').focus()" class="text-cobalt font-bold underline uppercase text-xs">Suggest adding it</button>
+                    <p class="font-h3 uppercase mb-2">Nothing mapped for &ldquo;${raw}&rdquo; yet</p>
+                    <p class="font-data-mono text-sm text-secondary mb-4">${nearMiss || "No hub, neighbourhood or LGA matches that."}</p>
+                    <button onclick="document.getElementById('suggestState').focus()" class="text-cobalt font-bold underline uppercase text-xs">Be the first to add it</button>
                 </div>`;
             } else {
                 noResultsEl.classList.add('hidden');
